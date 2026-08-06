@@ -1,0 +1,6 @@
+.env
+__pycache__/
+node_modules/
+cdk.out/
+.venv/
+EsportsLens_Project_Plan.md
