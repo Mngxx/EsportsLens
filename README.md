@@ -1,9 +1,11 @@
 # EsportsLens
 
-> **Status: Planning Complete — Build In Progress (Week 1: Foundation & Ingestion)**
-> Infrastructure (S3 data lake) is deployed. Ingestion, ETL, API, and frontend are not yet built.
+> **Status: Week 1 Complete — Ingestion Live in Production**
+> Infrastructure and ingestion (S3 data lake + scheduled Lambda for Dota 2 + League of Legends) are deployed and running every 6 hours. ETL, API, and frontend are not yet built.
 
-An esports analytics platform that ingests live and historical match data from public game APIs, processes it through an AWS data pipeline, and surfaces player and match insights through a public REST API and interactive dashboard.
+A player and match stats platform (tracker.gg-style) that ingests match data from public game APIs, processes it through an AWS data pipeline, and surfaces player performance, ladder standings, and match insights through a public REST API and interactive dashboard.
+
+**Dota 2** (via OpenDota, fully public API) is the primary game — real professional match data, no key required. **League of Legends** (Riot Games API) is secondary, tracking the Challenger ranked ladder rather than tournament matches, since Riot's official API has no tournament data for any third party. Valorant support is on hold — Riot restricts Valorant match-data API access to approved production keys, unlike League of Legends' match API, which works fine with a free personal key.
 
 ---
 
@@ -15,7 +17,7 @@ Built as a hands-on portfolio project to learn AWS data engineering end-to-end �
 
 ## How It Works
 
-1. An AWS Lambda function fetches match and player data from the Riot Games API (Valorant) and OpenDota API (Dota 2) on a 6-hour EventBridge schedule
+1. An AWS Lambda function fetches pro match data (Dota 2, via OpenDota) and Challenger ladder match data (League of Legends, via Riot's API) on a 6-hour EventBridge schedule
 2. Raw JSON lands in an S3 data lake, partitioned by game / year / month / day
 3. AWS Glue (PySpark) transforms the raw JSON into cleaned, typed, partitioned Parquet
 4. AWS Athena runs SQL directly over the curated Parquet data — no database to manage
@@ -39,7 +41,7 @@ Built as a hands-on portfolio project to learn AWS data engineering end-to-end �
 | CI/CD | GitHub Actions | Path-triggered — each folder deploys independently |
 | Testing | pytest (ingestion/API), Vitest (frontend) | |
 
-**Data sources:** [Riot Games API](https://developer.riotgames.com) (Valorant — requires a free dev key), [OpenDota API](https://www.opendota.com) (Dota 2 — public endpoints need no key)
+**Data sources:** [OpenDota API](https://www.opendota.com) (Dota 2 pro matches — fully public, no key required), [Riot Games API](https://developer.riotgames.com) (League of Legends Challenger ladder — free personal key), [Data Dragon](https://developer.riotgames.com/docs/lol) (LoL champion static data — separate host, no auth)
 
 ---
 
@@ -60,26 +62,35 @@ EsportsLens/
 
 ## Getting Started (Local Development)
 
-Not yet runnable end-to-end — only infrastructure is deployed so far. This section fills in as each layer comes online.
+Ingestion is live end-to-end; ETL, API, and frontend aren't built yet, so this only covers deploying/testing the ingestion pipeline so far.
 
-**Prerequisites so far:** AWS account with CLI configured (`aws configure`), Node.js 20+, a free [Riot Games dev API key](https://developer.riotgames.com) (expires every 24h — a production key requires app approval)
+**Prerequisites:** AWS account with CLI configured (`aws configure`), Node.js 20+, Python 3.12, Docker Desktop (required for CDK's Lambda dependency bundling), a free [Riot Games dev API key](https://developer.riotgames.com) (expires every 24h — a production key requires app approval)
 
 ```bash
-# Deploy the data lake (S3 raw + curated buckets)
+# Deploy the data lake + ingestion Lambda + EventBridge schedule
 cd infra
 npm install
-npx cdk deploy
+npx cdk deploy --all
+```
+
+```bash
+# Run the ingestion tests locally
+cd ingestion
+python -m venv venv
+venv\Scripts\activate        # Windows; source venv/bin/activate on macOS/Linux
+pip install -r requirements-dev.txt
+pytest
 ```
 
 ---
 
 ## Roadmap
 
-### Week 1 — Foundation & Ingestion (In Progress)
+### Week 1 — Foundation & Ingestion ✅ Complete
 - [x] AWS CDK project scaffolded
 - [x] S3 data lake deployed (raw + curated buckets, encrypted, private)
-- [ ] Ingestion Lambda (Valorant + Dota 2 fetchers)
-- [ ] EventBridge cron schedule (every 6 hours)
+- [x] Ingestion Lambda (Dota 2 + League of Legends fetchers, full test coverage)
+- [x] EventBridge cron schedule (every 6 hours) — deployed and verified writing real data to S3
 
 ### Week 2 — ETL & Athena
 - [ ] Glue PySpark transform jobs (raw JSON → curated Parquet)
