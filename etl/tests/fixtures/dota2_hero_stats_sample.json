@@ -1,0 +1,26 @@
+[
+	{
+		"id": 6,
+		"name": "npc_dota_hero_drow_ranger",
+		"localized_name": "Drow Ranger",
+		"primary_attr": "agi",
+		"attack_type": "Ranged",
+		"pub_pick": 548994,
+		"pub_win": 255215,
+		"pro_pick": 10,
+		"pro_win": 5,
+		"pro_ban": 17
+	},
+	{
+		"id": 25,
+		"name": "npc_dota_hero_lina",
+		"localized_name": "Lina",
+		"primary_attr": "int",
+		"attack_type": "Ranged",
+		"pub_pick": 799651,
+		"pub_win": 395419,
+		"pro_pick": 29,
+		"pro_win": 16,
+		"pro_ban": 62
+	}
+]

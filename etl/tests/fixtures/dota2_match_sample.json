@@ -1,0 +1,49 @@
+{
+	"match_id": 8944738770,
+	"start_time": 1786696586,
+	"duration": 2887,
+	"leagueid": 19719,
+	"radiant_win": true,
+	"players": [
+		{
+			"account_id": 898754153,
+			"personaname": "NothingToGay",
+			"hero_id": 6,
+			"isRadiant": true,
+			"win": 1,
+			"kills": 6,
+			"deaths": 3,
+			"assists": 7,
+			"kda": 3.25,
+			"last_hits": 603,
+			"denies": 16,
+			"gold_per_min": 783,
+			"xp_per_min": 1022,
+			"net_worth": 38455,
+			"hero_damage": 29162,
+			"tower_damage": 28507,
+			"hero_healing": 0,
+			"level": 27
+		},
+		{
+			"account_id": 140251702,
+			"personaname": "M",
+			"hero_id": 25,
+			"isRadiant": false,
+			"win": 0,
+			"kills": 6,
+			"deaths": 4,
+			"assists": 2,
+			"kda": 1.6,
+			"last_hits": 535,
+			"denies": 7,
+			"gold_per_min": 636,
+			"xp_per_min": 857,
+			"net_worth": 26586,
+			"hero_damage": 27318,
+			"tower_damage": 1566,
+			"hero_healing": 0,
+			"level": 26
+		}
+	]
+}

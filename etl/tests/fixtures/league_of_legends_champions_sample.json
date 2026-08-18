@@ -1,0 +1,21 @@
+{
+	"type": "champion",
+	"format": "standAloneComplex",
+	"version": "16.16.1",
+	"data": {
+		"Aatrox": {
+			"key": "266",
+			"name": "Aatrox",
+			"title": "the Darkin Blade",
+			"tags": ["Fighter"],
+			"info": { "attack": 8, "defense": 4, "magic": 3, "difficulty": 4 }
+		},
+		"Jayce": {
+			"key": "126",
+			"name": "Jayce",
+			"title": "the Defender of Tomorrow",
+			"tags": ["Fighter", "Marksman"],
+			"info": { "attack": 8, "defense": 4, "magic": 3, "difficulty": 7 }
+		}
+	}
+}
