@@ -1,6 +1,48 @@
+import sys
+
+from awsglue.context import GlueContext
+from awsglue.job import Job
+from awsglue.utils import getResolvedOptions
+from pyspark.context import SparkContext
 from pyspark.sql import DataFrame, Window
-from pyspark.sql.functions import col, explode, sum, when
+from pyspark.sql.functions import col, explode, month, sum, when, year
 from utils.helpers import read_s3_json
+
+
+def main():
+    args = getResolvedOptions(sys.argv, ["JOB_NAME", "RAW_BUCKET", "CURATED_BUCKET"])
+
+    sc = SparkContext()
+    glue_context = GlueContext(sc)
+    spark = glue_context.spark_session
+    spark.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+
+    job = Job(glue_context)
+    job.init(args["JOB_NAME"], args)
+
+    raw_bucket = args["RAW_BUCKET"]
+    curated_bucket = args["CURATED_BUCKET"]
+
+    matches_raw = read_s3_json(f"s3://{raw_bucket}/dota2/matches/")
+    matches_df = transform_matches(matches_raw)
+    matches_df = matches_df.withColumn("year", year("match_date")).withColumn(
+        "month", month("match_date")
+    )
+    matches_df.write.mode("overwrite").partitionBy("year", "month").parquet(
+        f"s3://{curated_bucket}/dota2/matches/"
+    )
+
+    heroes_raw = read_s3_json(f"s3://{raw_bucket}/dota2/heroes/")
+    transform_heroes(heroes_raw).write.mode("overwrite").parquet(
+        f"s3://{curated_bucket}/dota2/heroes/"
+    )
+
+    hero_stats_raw = read_s3_json(f"s3://{raw_bucket}/dota2/hero_stats/")
+    transform_hero_stats(hero_stats_raw).write.mode("overwrite").parquet(
+        f"s3://{curated_bucket}/dota2/hero_stats/"
+    )
+
+    job.commit()
 
 
 def transform_heroes(df: DataFrame) -> DataFrame:
@@ -72,3 +114,7 @@ def transform_matches(df: DataFrame) -> DataFrame:
     ).withColumnRenamed("is_radiant", "team")
     matches_df = matches_df.withColumn("win", (col("win") == 1))
     return matches_df
+
+
+if __name__ == "__main__":
+    main()

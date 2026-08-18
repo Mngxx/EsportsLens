@@ -1,5 +1,12 @@
+import sys
+
+from awsglue.context import GlueContext
+from awsglue.job import Job
+from awsglue.utils import getResolvedOptions
+from jobs.lol_champion_stats import transform_champion_stats
+from pyspark.context import SparkContext
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, concat, explode, lit
+from pyspark.sql.functions import col, concat, explode, lit, month, year
 from pyspark.sql.types import (
     ArrayType,
     IntegerType,
@@ -42,6 +49,44 @@ champion_schema = StructType(
         ),
     ]
 )
+
+
+def main():
+    args = getResolvedOptions(sys.argv, ["JOB_NAME", "RAW_BUCKET", "CURATED_BUCKET"])
+
+    sc = SparkContext()
+    glue_context = GlueContext(sc)
+    spark = glue_context.spark_session
+    spark.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+
+    job = Job(glue_context)
+    job.init(args["JOB_NAME"], args)
+
+    raw_bucket = args["RAW_BUCKET"]
+    curated_bucket = args["CURATED_BUCKET"]
+
+    matches_raw = read_s3_json(f"s3://{raw_bucket}/league_of_legends/matches/")
+    matches_df = transform_matches(matches_raw)
+    matches_df = matches_df.withColumn("year", year("match_date")).withColumn(
+        "month", month("match_date")
+    )
+    matches_df.write.mode("overwrite").partitionBy("year", "month").parquet(
+        f"s3://{curated_bucket}/league_of_legends/matches/"
+    )
+
+    champions_raw = read_s3_json(
+        f"s3://{raw_bucket}/league_of_legends/champions/", champion_schema
+    )
+    champions_df = transform_champions(champions_raw)
+    champions_df.write.mode("overwrite").parquet(
+        f"s3://{curated_bucket}/league_of_legends/champions/"
+    )
+
+    transform_champion_stats(matches_df).write.mode("overwrite").parquet(
+        f"s3://{curated_bucket}/league_of_legends/champion_stats/"
+    )
+
+    job.commit()
 
 
 def transform_matches(df: DataFrame) -> DataFrame:
@@ -97,3 +142,7 @@ def transform_champions(df: DataFrame) -> DataFrame:
         col("champ_data.info.difficulty").alias("difficulty"),
     )
     return champions_df
+
+
+if __name__ == "__main__":
+    main()
