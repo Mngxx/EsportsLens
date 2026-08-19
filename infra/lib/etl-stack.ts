@@ -88,5 +88,26 @@ export class EtlStack extends cdk.Stack {
 				].join(","),
 			},
 		});
+		new glue.CfnCrawler(this, "CuratedCrawler", {
+			name: "esportslens-curated-crawler",
+			role: glueJobRole.roleArn,
+			databaseName: database.databaseName,
+			targets: {
+				s3Targets: [
+					{ path: `s3://${props.curatedBucket.bucketName}/dota2/matches/` },
+					{ path: `s3://${props.curatedBucket.bucketName}/dota2/heroes/` },
+					{ path: `s3://${props.curatedBucket.bucketName}/dota2/hero_stats/` },
+					{
+						path: `s3://${props.curatedBucket.bucketName}/league_of_legends/matches/`,
+					},
+					{
+						path: `s3://${props.curatedBucket.bucketName}/league_of_legends/champions/`,
+					},
+					{
+						path: `s3://${props.curatedBucket.bucketName}/league_of_legends/champion_stats/`,
+					},
+				],
+			},
+		});
 	}
 }
