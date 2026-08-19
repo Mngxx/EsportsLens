@@ -1,6 +1,10 @@
+import * as path from "node:path";
+
 import * as glue_alpha from "@aws-cdk/aws-glue-alpha";
+import * as glue from "aws-cdk-lib/aws-glue";
 import * as iam from "aws-cdk-lib/aws-iam";
 import type * as s3 from "aws-cdk-lib/aws-s3";
+import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import * as cdk from "aws-cdk-lib/core";
 import type { Construct } from "constructs";
 
@@ -31,5 +35,58 @@ export class EtlStack extends cdk.Stack {
 
 		props.rawBucket.grantRead(glueJobRole);
 		props.curatedBucket.grantReadWrite(glueJobRole);
+		const etlDir = path.join(__dirname, "../../etl");
+		const utilsAsset = new Asset(this, "UtilsAsset", {
+			path: path.join(etlDir, "utils"), // zipped automatically — directory, not a file
+		});
+		const jobsAsset = new Asset(this, "JobsAsset", {
+			path: path.join(etlDir, "jobs"), // zipped automatically — needed only by the LoL job
+		});
+
+		const dota2ScriptAsset = new Asset(this, "Dota2ScriptAsset", {
+			path: path.join(etlDir, "jobs/dota2_transform.py"), // single file — uploaded as-is, not zipped
+		});
+		new glue.CfnJob(this, "Dota2TransformJob", {
+			name: "dota2-transform",
+			role: glueJobRole.roleArn,
+			glueVersion: "4.0",
+			workerType: "G.1X",
+			numberOfWorkers: 2,
+			command: {
+				name: "glueetl",
+				pythonVersion: "3",
+				scriptLocation: dota2ScriptAsset.s3ObjectUrl,
+			},
+			defaultArguments: {
+				"--RAW_BUCKET": props.rawBucket.bucketName,
+				"--CURATED_BUCKET": props.curatedBucket.bucketName,
+				"--extra-py-files": utilsAsset.s3ObjectUrl,
+			},
+		});
+
+		const lolScriptAsset = new Asset(this, "LolScriptAsset", {
+			path: path.join(etlDir, "jobs/league_of_legends_transform.py"),
+		});
+
+		new glue.CfnJob(this, "LeagueOfLegendsTransformJob", {
+			name: "league-of-legends-transform",
+			role: glueJobRole.roleArn,
+			glueVersion: "4.0",
+			workerType: "G.1X",
+			numberOfWorkers: 2,
+			command: {
+				name: "glueetl",
+				pythonVersion: "3",
+				scriptLocation: lolScriptAsset.s3ObjectUrl,
+			},
+			defaultArguments: {
+				"--RAW_BUCKET": props.rawBucket.bucketName,
+				"--CURATED_BUCKET": props.curatedBucket.bucketName,
+				"--extra-py-files": [
+					utilsAsset.s3ObjectUrl,
+					jobsAsset.s3ObjectUrl,
+				].join(","),
+			},
+		});
 	}
 }
