@@ -36,12 +36,11 @@ export class EtlStack extends cdk.Stack {
 		props.rawBucket.grantRead(glueJobRole);
 		props.curatedBucket.grantReadWrite(glueJobRole);
 		const etlDir = path.join(__dirname, "../../etl");
-		const utilsAsset = new Asset(this, "UtilsAsset", {
-			path: path.join(etlDir, "utils"), // zipped automatically — directory, not a file
+
+		const etlPackageAsset = new Asset(this, "EtlPackageAsset", {
+			path: etlDir, // zips etl/ as a whole, so utils/ and jobs/ land at the right relative paths
 		});
-		const jobsAsset = new Asset(this, "JobsAsset", {
-			path: path.join(etlDir, "jobs"), // zipped automatically — needed only by the LoL job
-		});
+		etlPackageAsset.grantRead(glueJobRole);
 
 		const dota2ScriptAsset = new Asset(this, "Dota2ScriptAsset", {
 			path: path.join(etlDir, "jobs/dota2_transform.py"), // single file — uploaded as-is, not zipped
@@ -60,9 +59,10 @@ export class EtlStack extends cdk.Stack {
 			defaultArguments: {
 				"--RAW_BUCKET": props.rawBucket.bucketName,
 				"--CURATED_BUCKET": props.curatedBucket.bucketName,
-				"--extra-py-files": utilsAsset.s3ObjectUrl,
+				"--extra-py-files": etlPackageAsset.s3ObjectUrl,
 			},
 		});
+		dota2ScriptAsset.grantRead(glueJobRole);
 
 		const lolScriptAsset = new Asset(this, "LolScriptAsset", {
 			path: path.join(etlDir, "jobs/league_of_legends_transform.py"),
@@ -82,12 +82,11 @@ export class EtlStack extends cdk.Stack {
 			defaultArguments: {
 				"--RAW_BUCKET": props.rawBucket.bucketName,
 				"--CURATED_BUCKET": props.curatedBucket.bucketName,
-				"--extra-py-files": [
-					utilsAsset.s3ObjectUrl,
-					jobsAsset.s3ObjectUrl,
-				].join(","),
+				"--extra-py-files": etlPackageAsset.s3ObjectUrl,
 			},
 		});
+		lolScriptAsset.grantRead(glueJobRole);
+
 		new glue.CfnCrawler(this, "CuratedCrawler", {
 			name: "esportslens-curated-crawler",
 			role: glueJobRole.roleArn,
