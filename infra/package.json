@@ -18,6 +18,7 @@
     "typescript": "~7.0.2"
   },
   "dependencies": {
+    "@aws-cdk/aws-glue-alpha": "^2.265.0-alpha.0",
     "@aws-cdk/aws-lambda-python-alpha": "^2.262.1-alpha.0",
     "aws-cdk-lib": "^2.262.0",
     "constructs": "^10.5.0",
