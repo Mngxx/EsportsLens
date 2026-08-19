@@ -4,6 +4,7 @@ import * as dotenv from "dotenv";
 
 dotenv.config({ path: "../ingestion/.env" });
 
+import { EtlStack } from "../lib/etl-stack";
 import { IngestionStack } from "../lib/ingestion-stack";
 import { StorageStack } from "../lib/storage-stack";
 
@@ -23,4 +24,9 @@ const storageStack = new StorageStack(app, "StorageStack", {
 
 new IngestionStack(app, "IngestionStack", {
 	rawBucket: storageStack.rawBucket,
+});
+
+new EtlStack(app, "EtlStack", {
+	rawBucket: storageStack.rawBucket,
+	curatedBucket: storageStack.curatedBucket,
 });
