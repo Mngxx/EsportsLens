@@ -87,18 +87,26 @@ export class EtlStack extends cdk.Stack {
 		});
 		lolScriptAsset.grantRead(glueJobRole);
 
-		new glue.CfnCrawler(this, "CuratedCrawler", {
-			name: "esportslens-curated-crawler",
+		new glue.CfnCrawler(this, "Dota2CuratedCrawler", {
+			name: "esportslens-dota2-curated-crawler",
 			role: glueJobRole.roleArn,
 			databaseName: database.databaseName,
+			tablePrefix: "dota2_",
 			targets: {
 				s3Targets: [
-					{ path: `s3://${props.curatedBucket.bucketName}/dota2/matches/` },
 					{ path: `s3://${props.curatedBucket.bucketName}/dota2/heroes/` },
 					{ path: `s3://${props.curatedBucket.bucketName}/dota2/hero_stats/` },
-					{
-						path: `s3://${props.curatedBucket.bucketName}/league_of_legends/matches/`,
-					},
+				],
+			},
+		});
+
+		new glue.CfnCrawler(this, "LeagueOfLegendsCuratedCrawler", {
+			name: "esportslens-league-of-legends-curated-crawler",
+			role: glueJobRole.roleArn,
+			databaseName: database.databaseName,
+			tablePrefix: "league_of_legends_",
+			targets: {
+				s3Targets: [
 					{
 						path: `s3://${props.curatedBucket.bucketName}/league_of_legends/champions/`,
 					},
@@ -106,6 +114,94 @@ export class EtlStack extends cdk.Stack {
 						path: `s3://${props.curatedBucket.bucketName}/league_of_legends/champion_stats/`,
 					},
 				],
+			},
+		});
+
+		new glue_alpha.S3Table(this, "Dota2MatchesTable", {
+			database,
+			tableName: "dota2_matches",
+			bucket: props.curatedBucket,
+			s3Prefix: "dota2/matches/",
+			dataFormat: glue_alpha.DataFormat.PARQUET,
+			columns: [
+				{ name: "match_id", type: glue_alpha.Schema.BIG_INT },
+				{ name: "account_id", type: glue_alpha.Schema.BIG_INT },
+				{ name: "player_name", type: glue_alpha.Schema.STRING },
+				{ name: "hero_id", type: glue_alpha.Schema.BIG_INT },
+				{ name: "team", type: glue_alpha.Schema.STRING },
+				{ name: "win", type: glue_alpha.Schema.BOOLEAN },
+				{ name: "kills", type: glue_alpha.Schema.BIG_INT },
+				{ name: "deaths", type: glue_alpha.Schema.BIG_INT },
+				{ name: "assists", type: glue_alpha.Schema.BIG_INT },
+				{ name: "kda", type: glue_alpha.Schema.DOUBLE },
+				{ name: "last_hits", type: glue_alpha.Schema.BIG_INT },
+				{ name: "denies", type: glue_alpha.Schema.BIG_INT },
+				{ name: "gold_per_min", type: glue_alpha.Schema.BIG_INT },
+				{ name: "xp_per_min", type: glue_alpha.Schema.BIG_INT },
+				{ name: "net_worth", type: glue_alpha.Schema.BIG_INT },
+				{ name: "hero_damage", type: glue_alpha.Schema.BIG_INT },
+				{ name: "tower_damage", type: glue_alpha.Schema.BIG_INT },
+				{ name: "hero_healing", type: glue_alpha.Schema.BIG_INT },
+				{ name: "level", type: glue_alpha.Schema.BIG_INT },
+				{ name: "league_id", type: glue_alpha.Schema.BIG_INT },
+				{ name: "duration_secs", type: glue_alpha.Schema.BIG_INT },
+				{ name: "match_date", type: glue_alpha.Schema.TIMESTAMP },
+			],
+			partitionKeys: [
+				{ name: "year", type: glue_alpha.Schema.INTEGER },
+				{ name: "month", type: glue_alpha.Schema.INTEGER },
+			],
+			partitionProjection: {
+				year: glue_alpha.PartitionProjectionConfiguration.integer({
+					min: 2026,
+					max: 2030,
+				}),
+				month: glue_alpha.PartitionProjectionConfiguration.integer({
+					min: 1,
+					max: 12,
+				}),
+			},
+		});
+
+		new glue_alpha.S3Table(this, "LeagueOfLegendsMatchesTable", {
+			database,
+			tableName: "league_of_legends_matches",
+			bucket: props.curatedBucket,
+			s3Prefix: "league_of_legends/matches/",
+			dataFormat: glue_alpha.DataFormat.PARQUET,
+			columns: [
+				{ name: "match_id", type: glue_alpha.Schema.STRING },
+				{ name: "puuid", type: glue_alpha.Schema.STRING },
+				{ name: "player_name", type: glue_alpha.Schema.STRING },
+				{ name: "champion_id", type: glue_alpha.Schema.BIG_INT },
+				{ name: "champion_name", type: glue_alpha.Schema.STRING },
+				{ name: "team_id", type: glue_alpha.Schema.BIG_INT },
+				{ name: "win", type: glue_alpha.Schema.BOOLEAN },
+				{ name: "kills", type: glue_alpha.Schema.BIG_INT },
+				{ name: "deaths", type: glue_alpha.Schema.BIG_INT },
+				{ name: "assists", type: glue_alpha.Schema.BIG_INT },
+				{ name: "gold_earned", type: glue_alpha.Schema.BIG_INT },
+				{ name: "damage_to_champions", type: glue_alpha.Schema.BIG_INT },
+				{ name: "cs", type: glue_alpha.Schema.BIG_INT },
+				{ name: "vision_score", type: glue_alpha.Schema.BIG_INT },
+				{ name: "champ_level", type: glue_alpha.Schema.BIG_INT },
+				{ name: "queue_id", type: glue_alpha.Schema.BIG_INT },
+				{ name: "duration_secs", type: glue_alpha.Schema.BIG_INT },
+				{ name: "match_date", type: glue_alpha.Schema.TIMESTAMP },
+			],
+			partitionKeys: [
+				{ name: "year", type: glue_alpha.Schema.INTEGER },
+				{ name: "month", type: glue_alpha.Schema.INTEGER },
+			],
+			partitionProjection: {
+				year: glue_alpha.PartitionProjectionConfiguration.integer({
+					min: 2026,
+					max: 2030,
+				}),
+				month: glue_alpha.PartitionProjectionConfiguration.integer({
+					min: 1,
+					max: 12,
+				}),
 			},
 		});
 	}
