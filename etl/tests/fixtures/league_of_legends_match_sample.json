@@ -1,0 +1,46 @@
+{
+	"metadata": { "matchId": "KR_8340378649" },
+	"info": {
+		"gameDuration": 1075,
+		"gameStartTimestamp": 1786722772928,
+		"queueId": 420,
+		"participants": [
+			{
+				"puuid": "q_BXXGOT5qYQDipR4ypstUf70qitSNz4FFuoY2GdP52-PD90z1fYOX2EuCZP1t7X2HqC4y74ijNdAQ",
+				"riotIdGameName": "kiin",
+				"riotIdTagline": "KR1",
+				"championId": 126,
+				"championName": "Jayce",
+				"teamId": 100,
+				"win": true,
+				"kills": 8,
+				"deaths": 2,
+				"assists": 5,
+				"goldEarned": 10349,
+				"totalDamageDealtToChampions": 18744,
+				"totalMinionsKilled": 173,
+				"neutralMinionsKilled": 6,
+				"visionScore": 24,
+				"champLevel": 14
+			},
+			{
+				"puuid": "X2GgbSpHHHI3M0LjZZK1bP0sFDRZleYUZ8s05dUx5_6pTphw41sQZdtzsiiPkEhbU3cXsQ4s6GWOGA",
+				"riotIdGameName": "대머리도적",
+				"riotIdTagline": "롤링쥬더",
+				"championId": 164,
+				"championName": "Camille",
+				"teamId": 200,
+				"win": false,
+				"kills": 4,
+				"deaths": 5,
+				"assists": 1,
+				"goldEarned": 6972,
+				"totalDamageDealtToChampions": 8191,
+				"totalMinionsKilled": 131,
+				"neutralMinionsKilled": 0,
+				"visionScore": 14,
+				"champLevel": 13
+			}
+		]
+	}
+}

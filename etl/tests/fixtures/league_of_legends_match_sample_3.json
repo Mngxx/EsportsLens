@@ -1,0 +1,46 @@
+{
+	"metadata": { "matchId": "KR_8340431177" },
+	"info": {
+		"gameDuration": 1890,
+		"gameStartTimestamp": 1786740000000,
+		"queueId": 420,
+		"participants": [
+			{
+				"puuid": "puuid_jayce_match3",
+				"riotIdGameName": "TopJayce",
+				"riotIdTagline": "KR3",
+				"championId": 126,
+				"championName": "Jayce",
+				"teamId": 100,
+				"win": true,
+				"kills": 9,
+				"deaths": 2,
+				"assists": 7,
+				"goldEarned": 13200,
+				"totalDamageDealtToChampions": 19800,
+				"totalMinionsKilled": 205,
+				"neutralMinionsKilled": 5,
+				"visionScore": 22,
+				"champLevel": 16
+			},
+			{
+				"puuid": "puuid_ahri_match3",
+				"riotIdGameName": "MidAhri",
+				"riotIdTagline": "KR4",
+				"championId": 103,
+				"championName": "Ahri",
+				"teamId": 200,
+				"win": false,
+				"kills": 4,
+				"deaths": 5,
+				"assists": 3,
+				"goldEarned": 9100,
+				"totalDamageDealtToChampions": 16200,
+				"totalMinionsKilled": 175,
+				"neutralMinionsKilled": 1,
+				"visionScore": 19,
+				"champLevel": 13
+			}
+		]
+	}
+}

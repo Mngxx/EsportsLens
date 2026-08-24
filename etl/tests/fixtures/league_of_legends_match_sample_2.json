@@ -1,0 +1,46 @@
+{
+	"metadata": { "matchId": "KR_8340430001" },
+	"info": {
+		"gameDuration": 1620,
+		"gameStartTimestamp": 1786730000000,
+		"queueId": 420,
+		"participants": [
+			{
+				"puuid": "puuid_camille_match2",
+				"riotIdGameName": "CamilleMain",
+				"riotIdTagline": "KR1",
+				"championId": 164,
+				"championName": "Camille",
+				"teamId": 100,
+				"win": true,
+				"kills": 10,
+				"deaths": 3,
+				"assists": 6,
+				"goldEarned": 12500,
+				"totalDamageDealtToChampions": 21000,
+				"totalMinionsKilled": 190,
+				"neutralMinionsKilled": 8,
+				"visionScore": 28,
+				"champLevel": 15
+			},
+			{
+				"puuid": "puuid_jayce_match2",
+				"riotIdGameName": "JayceOnly",
+				"riotIdTagline": "KR2",
+				"championId": 126,
+				"championName": "Jayce",
+				"teamId": 200,
+				"win": false,
+				"kills": 3,
+				"deaths": 6,
+				"assists": 2,
+				"goldEarned": 7800,
+				"totalDamageDealtToChampions": 9500,
+				"totalMinionsKilled": 150,
+				"neutralMinionsKilled": 2,
+				"visionScore": 16,
+				"champLevel": 12
+			}
+		]
+	}
+}
