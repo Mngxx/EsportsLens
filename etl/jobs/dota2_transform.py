@@ -6,7 +6,7 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from pyspark.sql import DataFrame, Window
 from pyspark.sql.functions import col, explode, month, sum, when, year
-from utils.helpers import read_s3_json
+from utils.helpers import latest_s3_key, read_s3_json
 
 
 def main():
@@ -28,16 +28,19 @@ def main():
     matches_df = matches_df.withColumn("year", year("match_date")).withColumn(
         "month", month("match_date")
     )
+
     matches_df.write.mode("overwrite").partitionBy("year", "month").parquet(
         f"s3://{curated_bucket}/dota2/matches/"
     )
+    heroes_key = latest_s3_key(raw_bucket, "dota2/heroes/")
+    heroes_raw = read_s3_json(f"s3://{raw_bucket}/{heroes_key}")
 
-    heroes_raw = read_s3_json(f"s3://{raw_bucket}/dota2/heroes/")
     transform_heroes(heroes_raw).write.mode("overwrite").parquet(
         f"s3://{curated_bucket}/dota2/heroes/"
     )
+    hero_stats_key = latest_s3_key(raw_bucket, "dota2/hero_stats/")
+    hero_stats_raw = read_s3_json(f"s3://{raw_bucket}/{hero_stats_key}")
 
-    hero_stats_raw = read_s3_json(f"s3://{raw_bucket}/dota2/hero_stats/")
     transform_hero_stats(hero_stats_raw).write.mode("overwrite").parquet(
         f"s3://{curated_bucket}/dota2/hero_stats/"
     )

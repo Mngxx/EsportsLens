@@ -3,7 +3,6 @@ import sys
 from awsglue.context import GlueContext
 from awsglue.job import Job
 from awsglue.utils import getResolvedOptions
-from jobs.lol_champion_stats import transform_champion_stats
 from pyspark.context import SparkContext
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, concat, explode, lit, month, year
@@ -15,7 +14,9 @@ from pyspark.sql.types import (
     StructField,
     StructType,
 )
-from utils.helpers import read_s3_json
+from utils.helpers import latest_s3_key, read_s3_json
+
+from jobs.lol_champion_stats import transform_champion_stats
 
 champion_schema = StructType(
     [
@@ -73,10 +74,9 @@ def main():
     matches_df.write.mode("overwrite").partitionBy("year", "month").parquet(
         f"s3://{curated_bucket}/league_of_legends/matches/"
     )
+    champions_key = latest_s3_key(raw_bucket, "league_of_legends/champions/")
+    champions_raw = read_s3_json(f"s3://{raw_bucket}/{champions_key}", champion_schema)
 
-    champions_raw = read_s3_json(
-        f"s3://{raw_bucket}/league_of_legends/champions/", champion_schema
-    )
     champions_df = transform_champions(champions_raw)
     champions_df.write.mode("overwrite").parquet(
         f"s3://{curated_bucket}/league_of_legends/champions/"
