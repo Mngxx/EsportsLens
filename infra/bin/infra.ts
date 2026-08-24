@@ -6,6 +6,7 @@ dotenv.config({ path: "../ingestion/.env" });
 
 import { EtlStack } from "../lib/etl-stack";
 import { IngestionStack } from "../lib/ingestion-stack";
+import { QueryStack } from "../lib/query-stack";
 import { StorageStack } from "../lib/storage-stack";
 
 const app = new cdk.App();
@@ -30,3 +31,4 @@ new EtlStack(app, "EtlStack", {
 	rawBucket: storageStack.rawBucket,
 	curatedBucket: storageStack.curatedBucket,
 });
+new QueryStack(app, "QueryStack", {});
