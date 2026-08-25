@@ -1,7 +1,7 @@
 # EsportsLens
 
-> **Status: Week 1 Complete — Ingestion Live in Production**
-> Infrastructure and ingestion (S3 data lake + scheduled Lambda for Dota 2 + League of Legends) are deployed and running every 6 hours. ETL, API, and frontend are not yet built.
+> **Status: Weeks 1–2 Complete — Ingestion, ETL, and Athena Live in Production**
+> Infrastructure, ingestion (S3 data lake + scheduled Lambda), ETL (Glue PySpark jobs → curated Parquet), and querying (Athena, with partition projection) are deployed and verified end-to-end against real data. API and frontend are not yet built.
 
 A player and match stats platform (tracker.gg-style) that ingests match data from public game APIs, processes it through an AWS data pipeline, and surfaces player performance, ladder standings, and match insights through a public REST API and interactive dashboard.
 
@@ -62,12 +62,12 @@ EsportsLens/
 
 ## Getting Started (Local Development)
 
-Ingestion is live end-to-end; ETL, API, and frontend aren't built yet, so this only covers deploying/testing the ingestion pipeline so far.
+Ingestion, ETL, and Athena are live end-to-end; API and frontend aren't built yet, so this covers deploying/testing the pipeline through querying.
 
-**Prerequisites:** AWS account with CLI configured (`aws configure`), Node.js 20+, Python 3.12, Docker Desktop (required for CDK's Lambda dependency bundling), a free [Riot Games dev API key](https://developer.riotgames.com) (expires every 24h — a production key requires app approval)
+**Prerequisites:** AWS account with CLI configured (`aws configure`), Node.js 20+, Python 3.12, Docker Desktop (required for CDK's Lambda dependency bundling, and for local PySpark development via AWS's official `aws-glue-libs` image — there's no supported way to run real PySpark locally without it), a free [Riot Games dev API key](https://developer.riotgames.com) (expires every 24h — a production key requires app approval)
 
 ```bash
-# Deploy the data lake + ingestion Lambda + EventBridge schedule
+# Deploy the data lake + ingestion Lambda + EventBridge schedule + Glue ETL jobs + Athena workgroup
 cd infra
 npm install
 npx cdk deploy --all
@@ -82,6 +82,13 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
+```bash
+# Run the ETL (PySpark) tests locally — needs a JVM, so tests run inside AWS's official Glue container
+docker run -it --rm -v "<path-to-repo>:/home/glue_user/workspace" public.ecr.aws/glue/aws-glue-libs:glue_libs_4.0.0_image_01
+cd /home/glue_user/workspace/etl
+python3 -m pytest -v
+```
+
 ---
 
 ## Roadmap
@@ -92,9 +99,10 @@ pytest
 - [x] Ingestion Lambda (Dota 2 + League of Legends fetchers, full test coverage)
 - [x] EventBridge cron schedule (every 6 hours) — deployed and verified writing real data to S3
 
-### Week 2 — ETL & Athena
-- [ ] Glue PySpark transform jobs (raw JSON → curated Parquet)
-- [ ] Athena tables and partition projection
+### Week 2 — ETL & Athena ✅ Complete
+- [x] Glue PySpark transform jobs (raw JSON → curated Parquet) — two jobs covering all six curated tables across both games
+- [x] Glue Catalog tables — crawler-discovered reference tables (heroes, hero stats, champions, champion stats) + explicitly-defined, partition-projected match tables
+- [x] Athena workgroup deployed via CDK — verified with real queries returning correct data end-to-end, not just a successful deploy
 
 ### Week 3 — API Layer
 - [ ] FastAPI routes — players, matches, meta
