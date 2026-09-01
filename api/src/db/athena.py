@@ -26,7 +26,7 @@ def run_query(sql: str) -> list[dict]:
     query_id = response["QueryExecutionId"]
     state = _poll_athena_query(query_id)
     if state != "SUCCEEDED":
-        raise AthenaQueryError(f"Query {query_id} finishied with state: {state}")
+        raise AthenaQueryError(f"Query {query_id} finished with state: {state}")
     query_results = athena_client.get_query_results(QueryExecutionId=query_id)
     athena_results = _parse_athena_results(query_results)
     return athena_results
