@@ -4,12 +4,17 @@ import time
 import boto3
 from src.config import ATHENA_DATABASE, ATHENA_WORKGROUP
 
+
 athena_client = boto3.client("athena")
 logging.basicConfig(
     level=logging.WARNING, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 logging.getLogger("boto3").setLevel(logging.WARNING)
+
+
+class AthenaQueryError(Exception):
+    pass
 
 
 def run_query(sql: str) -> list[dict]:
@@ -19,13 +24,15 @@ def run_query(sql: str) -> list[dict]:
         WorkGroup=ATHENA_WORKGROUP,
     )
     query_id = response["QueryExecutionId"]
-    poll_athena_query(query_id)
+    state = _poll_athena_query(query_id)
+    if state != "SUCCEEDED":
+        raise AthenaQueryError(f"Query {query_id} finishied with state: {state}")
     query_results = athena_client.get_query_results(QueryExecutionId=query_id)
-    athena_results = parse_athena_results(query_results)
+    athena_results = _parse_athena_results(query_results)
     return athena_results
 
 
-def poll_athena_query(query_execution_id: str) -> str:
+def _poll_athena_query(query_execution_id: str) -> str:
     while True:
         response = athena_client.get_query_execution(
             QueryExecutionId=query_execution_id
@@ -40,7 +47,7 @@ def poll_athena_query(query_execution_id: str) -> str:
             raise Exception(f"Unexpected state: {state}")
 
 
-def parse_athena_results(query_results: dict) -> list[dict]:
+def _parse_athena_results(query_results: dict) -> list[dict]:
     # 1. Extract Column Names from Metadata
     columns = [
         col["Label"]
