@@ -41,7 +41,7 @@ def _poll_athena_query(query_execution_id: str) -> str:
 
         if state in ["SUCCEEDED", "FAILED", "CANCELLED"]:
             return state
-        elif state == "RUNNING":
+        elif state in ["RUNNING", "QUEUED"]:
             time.sleep(1)  # Wait before next poll
         else:
             raise Exception(f"Unexpected state: {state}")
