@@ -91,6 +91,17 @@ def test_get_dota2_heroes_stats_athena_failure():
         )
 
 
+def test_get_dota2_heroes_stats_null_rates():
+    with patch("src.routes.meta.run_query") as mock_run_query:
+        mock_run_query.return_value = [
+            make_dota2_hero_stats_row(win_rate="", ban_rate="")
+        ]
+        response = client.get("meta/dota2/heroes/stats")
+        assert response.status_code == 200
+        assert response.json()[0]["win_rate"] is None
+        assert response.json()[0]["ban_rate"] is None
+
+
 def test_get_lol_champions():
     with patch("src.routes.meta.run_query") as mock_run_query:
         mock_run_query.return_value = [
