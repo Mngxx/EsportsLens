@@ -29,6 +29,37 @@ def make_dota2_match_row(**overrides):
     return row
 
 
+def make_dota2_heroes_row(**overrides):
+    row = {
+        "hero_id": 6,
+        "name": "npc_dota_hero_antimage",
+        "localized_name": "Anti-Mage",
+        "primary_attr": "agi",
+        "attack_type": "Meele",
+    }
+    row.update(overrides)
+    return row
+
+
+def make_dota2_hero_stats_row(**overrides):
+    row = {
+        "hero_id": 6,
+        "hero_name": "npc_dota_hero_antimage",
+        "primary_attr": "agi",
+        "attack_type": "Meele",
+        "pub_pick": 35467,
+        "pub_win": 23356,
+        "pro_pick": 0,
+        "pro_win": 0,
+        "pro_ban": 0,
+        "win_rate": 0.75,
+        "ban_rate": 0.05,
+        "pick_rate": 0.11,
+    }
+    row.update(overrides)
+    return row
+
+
 def make_lol_match_row(**overrides):
     row = {
         "match_id": "abc123",
@@ -51,6 +82,34 @@ def make_lol_match_row(**overrides):
         "match_date": "2026-08-01T12:00:00",
         "year": 2026,
         "month": 8,
+    }
+    row.update(overrides)
+    return row
+
+
+def make_lol_champions_row(**overrides):
+    row = {
+        "champion_id": 157,
+        "name": "Yasuo",
+        "title": "The Unforgiven",
+        "primary_tag": "Fighter",
+        "attack": 8,
+        "defense": 6,
+        "magic": 3,
+        "difficulty": 4,
+    }
+    row.update(overrides)
+    return row
+
+
+def make_lol_champion_stats_row(**overrides):
+    row = {
+        "champion_id": 157,
+        "champion_name": "Yasuo",
+        "matches_played": 12,
+        "wins": 12,
+        "pick_rate": 0.12,
+        "win_rate": 1.0,
     }
     row.update(overrides)
     return row
