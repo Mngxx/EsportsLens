@@ -25,6 +25,8 @@ export class EtlStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    const database = this.database;
+
     //IAM role shared by both Glue jobs
     const glueJobRole = new iam.Role(this, "GlueJobRole", {
       assumedBy: new iam.ServicePrincipal("glue.amazonaws.com"),

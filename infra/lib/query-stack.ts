@@ -25,7 +25,7 @@ export class QueryStack extends cdk.Stack {
       recursiveDeleteOption: true,
       workGroupConfiguration: {
         resultConfiguration: {
-          outputLocation: `s3://${athenaResultsBucket.bucketName}/`,
+          outputLocation: `s3://${this.athenaResultsBucket.bucketName}/`,
         },
         enforceWorkGroupConfiguration: true,
         publishCloudWatchMetricsEnabled: true,
