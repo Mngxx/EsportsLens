@@ -1,6 +1,6 @@
-from src.models.schemas import Dota2MatchSchema, LoLMatchSchema
+from models.schemas import Dota2MatchSchema, LoLMatchSchema
 from fastapi import APIRouter, Path
-from src.db.athena import run_query
+from db.athena import run_query
 
 router = APIRouter(prefix="/matches", tags=["matches"])
 

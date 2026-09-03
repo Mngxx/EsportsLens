@@ -101,8 +101,10 @@ pytest
 ```bash
 # Run the API locally against real Athena data
 # needs api/.env with ATHENA_DATABASE, ATHENA_WORKGROUP, ATHENA_OUTPUT_LOCATION, AWS_REGION
-cd api
-uvicorn src.main:app --reload
+# run from api/src (not api/) — source files use bare imports to match the flattened
+# layout CDK's PythonFunction actually deploys to Lambda, so this needs to be the CWD
+cd api/src
+uvicorn main:app --reload
 # then open http://localhost:8000/docs for interactive Swagger UI
 ```
 
