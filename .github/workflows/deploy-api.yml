@@ -23,6 +23,12 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     environment: "AWS Access Credentials"
+    env:
+      # bin/infra.ts constructs every stack (including IngestionStack) unconditionally,
+      # even though only ApiStack is targeted below — IngestionStack's constructor guards
+      # on RIOT_API_KEY being set, so this placeholder just satisfies that check.
+      # IngestionStack itself is never deployed by this workflow.
+      RIOT_API_KEY: "unused-placeholder-cdk-deploy-apistack-only"
     defaults:
       run:
         working-directory: infra
