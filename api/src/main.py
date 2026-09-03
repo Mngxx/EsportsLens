@@ -3,8 +3,16 @@ from fastapi.responses import JSONResponse
 from src.db.athena import AthenaQueryError
 from src.routes import players, matches, meta
 from mangum import Mangum
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
 app.include_router(players.router)
 app.include_router(matches.router)
 app.include_router(meta.router)
