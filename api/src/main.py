@@ -1,7 +1,7 @@
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
-from src.db.athena import AthenaQueryError
-from src.routes import players, matches, meta
+from db.athena import AthenaQueryError
+from routes import players, matches, meta
 from mangum import Mangum
 from fastapi.middleware.cors import CORSMiddleware
 

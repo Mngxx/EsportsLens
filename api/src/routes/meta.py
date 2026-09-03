@@ -1,11 +1,11 @@
-from src.models.schemas import (
+from models.schemas import (
     Dota2HeroSchema,
     Dota2HeroStatsSchema,
     LoLChampionSchema,
     LoLChampionStatsSchema,
 )
 from fastapi import APIRouter
-from src.db.athena import run_query
+from db.athena import run_query
 
 router = APIRouter(prefix="/meta", tags=["meta"])
 

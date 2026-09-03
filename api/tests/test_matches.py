@@ -1,14 +1,14 @@
 from fastapi.testclient import TestClient
 from src.main import app
 from unittest.mock import patch
-from src.db.athena import AthenaQueryError
+from db.athena import AthenaQueryError
 from tests.conftest import make_dota2_match_row, make_lol_match_row
 
 client = TestClient(app)
 
 
 def test_get_dota2_matches():
-    with patch("src.routes.matches.run_query") as mock_run_query:
+    with patch("routes.matches.run_query") as mock_run_query:
         mock_run_query.return_value = [
             make_dota2_match_row(account_id=3456, team="radiant", win=True, hero_id=6),
             make_dota2_match_row(account_id=45678, team="dire", win=False, hero_id=14),
@@ -25,7 +25,7 @@ def test_get_dota2_matches():
 
 
 def test_get_dota2_matches_no_results():
-    with patch("src.routes.matches.run_query") as mock_run_query:
+    with patch("routes.matches.run_query") as mock_run_query:
         mock_run_query.return_value = []
         response = client.get("matches/dota2/999")
         assert response.status_code == 200
@@ -36,7 +36,7 @@ def test_get_dota2_matches_no_results():
 
 
 def test_get_dota2_matches_athena_failure():
-    with patch("src.routes.matches.run_query") as mock_run_query:
+    with patch("routes.matches.run_query") as mock_run_query:
         mock_run_query.side_effect = AthenaQueryError(
             "Query 123 finished with state: FAILED"
         )
@@ -49,7 +49,7 @@ def test_get_dota2_matches_athena_failure():
 
 
 def test_get_lol_matches():
-    with patch("src.routes.matches.run_query") as mock_run_query:
+    with patch("routes.matches.run_query") as mock_run_query:
         mock_run_query.return_value = [
             make_lol_match_row(
                 puuid="puuid-xyz-789", team_id=100, win=True, champion_id=157
@@ -74,7 +74,7 @@ def test_get_lol_matches():
 
 
 def test_get_lol_matches_no_results():
-    with patch("src.routes.matches.run_query") as mock_run_query:
+    with patch("routes.matches.run_query") as mock_run_query:
         mock_run_query.return_value = []
         response = client.get("matches/lol/999")
         assert response.status_code == 200
@@ -85,7 +85,7 @@ def test_get_lol_matches_no_results():
 
 
 def test_get_lol_matches_athena_failure():
-    with patch("src.routes.matches.run_query") as mock_run_query:
+    with patch("routes.matches.run_query") as mock_run_query:
         mock_run_query.side_effect = AthenaQueryError(
             "Query abc123 finished with state: FAILED"
         )
@@ -100,14 +100,14 @@ def test_get_lol_matches_athena_failure():
 
 
 def test_get_lol_matches_invalid_match_id_rejected():
-    with patch("src.routes.matches.run_query") as mock_run_query:
+    with patch("routes.matches.run_query") as mock_run_query:
         response = client.get("matches/lol/abc'; DROP TABLE--")
         assert response.status_code == 422
         mock_run_query.assert_not_called()
 
 
 def test_get_dota2_matches_invalid_match_id_rejected():
-    with patch("src.routes.matches.run_query") as mock_run_query:
+    with patch("routes.matches.run_query") as mock_run_query:
         response = client.get("matches/dota2/not-a-number")
         assert response.status_code == 422
         mock_run_query.assert_not_called()

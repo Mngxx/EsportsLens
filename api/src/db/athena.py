@@ -2,7 +2,7 @@ import logging
 import time
 
 import boto3
-from src.config import ATHENA_DATABASE, ATHENA_WORKGROUP
+from config import ATHENA_DATABASE, ATHENA_WORKGROUP
 
 
 athena_client = boto3.client("athena")
