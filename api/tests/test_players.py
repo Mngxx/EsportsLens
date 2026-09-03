@@ -126,3 +126,24 @@ def test_get_lol_players_invalid_puuid_rejected():
         response = client.get("players/lol/abc'; DROP TABLE--/matches")
         assert response.status_code == 422
         mock_run_query.assert_not_called()
+
+
+def test_get_dota2_players_invalid_account_id_rejected():
+    with patch("src.routes.players.run_query") as mock_run_query:
+        response = client.get("players/dota2/not-a-number/matches")
+        assert response.status_code == 422
+        mock_run_query.assert_not_called()
+
+
+def test_get_dota2_players_limit_exceeds_max():
+    with patch("src.routes.players.run_query") as mock_run_query:
+        response = client.get("players/dota2/3456/matches?limit=51")
+        assert response.status_code == 422
+        mock_run_query.assert_not_called()
+
+
+def test_get_lol_players_limit_exceeds_max():
+    with patch("src.routes.players.run_query") as mock_run_query:
+        response = client.get("players/lol/puuid-xyz-789/matches?limit=51")
+        assert response.status_code == 422
+        mock_run_query.assert_not_called()

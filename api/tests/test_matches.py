@@ -104,3 +104,10 @@ def test_get_lol_matches_invalid_match_id_rejected():
         response = client.get("matches/lol/abc'; DROP TABLE--")
         assert response.status_code == 422
         mock_run_query.assert_not_called()
+
+
+def test_get_dota2_matches_invalid_match_id_rejected():
+    with patch("src.routes.matches.run_query") as mock_run_query:
+        response = client.get("matches/dota2/not-a-number")
+        assert response.status_code == 422
+        mock_run_query.assert_not_called()
