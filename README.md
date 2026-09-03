@@ -1,7 +1,7 @@
 # EsportsLens
 
-> **Status: Weeks 1–2 Complete — Ingestion, ETL, and Athena Live in Production**
-> Infrastructure, ingestion (S3 data lake + scheduled Lambda), ETL (Glue PySpark jobs → curated Parquet), and querying (Athena, with partition projection) are deployed and verified end-to-end against real data. API and frontend are not yet built.
+> **Status: Weeks 1–3 Complete — Ingestion, ETL, Athena, and the API Live in Production**
+> Infrastructure, ingestion (S3 data lake + scheduled Lambda), ETL (Glue PySpark jobs → curated Parquet), querying (Athena, with partition projection), and the FastAPI backend (Lambda + API Gateway, 9 endpoints across players/matches/meta) are deployed and verified end-to-end against real data. Frontend is not yet built.
 
 A player and match stats platform (tracker.gg-style) that ingests match data from public game APIs, processes it through an AWS data pipeline, and surfaces player performance, ladder standings, and match insights through a public REST API and interactive dashboard.
 
@@ -62,7 +62,7 @@ EsportsLens/
 
 ## Getting Started (Local Development)
 
-Ingestion, ETL, and Athena are live end-to-end; API and frontend aren't built yet, so this covers deploying/testing the pipeline through querying.
+Ingestion, ETL, Athena, and the API are live end-to-end; the frontend isn't built yet, so this covers deploying/testing the pipeline through the API layer.
 
 **Prerequisites:** AWS account with CLI configured (`aws configure`), Node.js 20+, Python 3.12, Docker Desktop (required for CDK's Lambda dependency bundling, and for local PySpark development via AWS's official `aws-glue-libs` image — there's no supported way to run real PySpark locally without it), a free [Riot Games dev API key](https://developer.riotgames.com) (expires every 24h — a production key requires app approval)
 
@@ -89,6 +89,23 @@ cd /home/glue_user/workspace/etl
 python3 -m pytest -v
 ```
 
+```bash
+# Run the API tests locally (Athena mocked, no AWS credentials required)
+cd api
+python -m venv venv
+venv\Scripts\activate        # Windows; source venv/bin/activate on macOS/Linux
+pip install -r requirements-dev.txt
+pytest
+```
+
+```bash
+# Run the API locally against real Athena data
+# needs api/.env with ATHENA_DATABASE, ATHENA_WORKGROUP, ATHENA_OUTPUT_LOCATION, AWS_REGION
+cd api
+uvicorn src.main:app --reload
+# then open http://localhost:8000/docs for interactive Swagger UI
+```
+
 ---
 
 ## Roadmap
@@ -104,10 +121,11 @@ python3 -m pytest -v
 - [x] Glue Catalog tables — crawler-discovered reference tables (heroes, hero stats, champions, champion stats) + explicitly-defined, partition-projected match tables
 - [x] Athena workgroup deployed via CDK — verified with real queries returning correct data end-to-end, not just a successful deploy
 
-### Week 3 — API Layer
-- [ ] FastAPI routes — players, matches, meta
-- [ ] Lambda deployment via Mangum + API Gateway
-- [ ] pytest coverage with mocked Athena responses
+### Week 3 — API Layer ✅ Complete
+- [x] FastAPI routes — players, matches, meta (9 endpoints across both games, plus health check)
+- [x] Lambda deployment via Mangum + API Gateway (HTTP API, catch-all integration) — deployed via CDK `ApiStack`
+- [x] pytest coverage with mocked Athena responses (32 tests: happy path, empty results, Athena failures, input-validation/injection-guard cases)
+- [x] CORS middleware (localhost + Vercel preview domains) and a GitHub Actions deploy workflow
 
 ### Week 4 — Frontend Dashboard
 - [ ] React dashboard — Dashboard, Players, Matches, Meta pages
