@@ -37,6 +37,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+      # cdk deploy's PythonFunction bundling shells out to the local pip/python on
+      # PATH — without this step it falls back to the runner's ambient system Python,
+      # which has poetry preinstalled globally and its pinned urllib3<2.0.0 conflicts
+      # with boto3's urllib3==2.7.0. A clean, explicitly-versioned interpreter avoids
+      # touching those preinstalled packages at all.
       - run: npm install
       - uses: aws-actions/configure-aws-credentials@v4
         with:
