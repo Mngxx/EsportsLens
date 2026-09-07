@@ -22,3 +22,21 @@ def get_lol_players(
     sql = f"SELECT * FROM league_of_legends_matches WHERE puuid = '{puuid}' ORDER BY match_date DESC LIMIT {limit}"
     lol_players = run_query(sql)
     return lol_players
+
+
+def search_dota2_players(
+    name: str = Query(default="", min_length=3, max_length=50),
+    limit: int = Query(default=10, le=50),
+) -> list[Dota2MatchSchema]:
+    safe_name = name.replace("'", "''")
+    sql = f"SELECT DISTINCT account_id, player_name FROM dota2_matches WHERE LOWER(player_name) LIKE LOWER('%{safe_name}%') ORDER BY match_date DESC LIMIT {limit}"
+    return run_query(sql)
+
+
+def search_lol_players(
+    name: str = Query(default="", min_length=3, max_length=50),
+    limit: int = Query(default=10, le=50),
+) -> list[LoLMatchSchema]:
+    safe_name = name.replace("'", "''")
+    sql = f"SELECT DISTINCT puuid, player_name FROM league_of_legends_matches WHERE LOWER(player_name) LIKE LOWER('%{safe_name}%') ORDER BY match_date DESC LIMIT {limit}"
+    return run_query(sql)
