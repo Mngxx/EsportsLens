@@ -98,3 +98,13 @@ class LoLChampionStatsSchema(BaseModel):
     wins: int
     pick_rate: float
     win_rate: float
+
+
+class Dota2PlayerSearchSchema(BaseModel):
+    account_id: int
+    player_name: str
+
+
+class LolPlayerSearchSchema(BaseModel):
+    puuid: str
+    player_name: str
