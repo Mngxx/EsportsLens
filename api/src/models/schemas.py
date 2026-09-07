@@ -105,6 +105,6 @@ class Dota2PlayerSearchSchema(BaseModel):
     player_name: str
 
 
-class LolPlayerSearchSchema(BaseModel):
+class LoLPlayerSearchSchema(BaseModel):
     puuid: str
     player_name: str
