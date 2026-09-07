@@ -113,3 +113,21 @@ def make_lol_champion_stats_row(**overrides):
     }
     row.update(overrides)
     return row
+
+
+def make_dota2_player_search_row(**overrides):
+    row = {
+        "account_id": 3456,
+        "player_name": "test_player_1",
+    }
+    row.update(overrides)
+    return row
+
+
+def make_lol_player_search_row(**overrides):
+    row = {
+        "puuid": "puuid-xyz-789",
+        "player_name": "test_player_1#NA1",
+    }
+    row.update(overrides)
+    return row
