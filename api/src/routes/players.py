@@ -24,6 +24,7 @@ def get_lol_players(
     return lol_players
 
 
+@router.get("/dota2/search", response_model=list[Dota2MatchSchema])
 def search_dota2_players(
     name: str = Query(default="", min_length=3, max_length=50),
     limit: int = Query(default=10, le=50),
@@ -33,6 +34,7 @@ def search_dota2_players(
     return run_query(sql)
 
 
+@router.get("/lol/search", response_model=list[LoLMatchSchema])
 def search_lol_players(
     name: str = Query(default="", min_length=3, max_length=50),
     limit: int = Query(default=10, le=50),
