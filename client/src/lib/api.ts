@@ -9,7 +9,8 @@ import type {
     LoLMatch,
     LoLPlayerSearchResult,
 } from "../types";
-import { API_URL, ApiError, setLimit, checkName } from "../config";
+import { API_URL } from "../config";
+import { ApiError, setLimit, checkName } from "./validation";
 
 async function apiFetch<T>(
     path: string,
@@ -42,9 +43,9 @@ export function getDota2PlayerMatches(
     limit?: number,
 ): Promise<Dota2Match[]> {
     const effectiveLimit = setLimit(limit);
-    return apiFetch<Dota2Match[]>(
-        `/players/dota2/${account_id}/matches?limit=${effectiveLimit}`,
-    );
+    return apiFetch<Dota2Match[]>(`/players/dota2/${account_id}/matches`, {
+        limit: effectiveLimit,
+    });
 }
 
 export function getLoLPlayerMatches(
@@ -52,9 +53,9 @@ export function getLoLPlayerMatches(
     limit?: number,
 ): Promise<LoLMatch[]> {
     const effectiveLimit = setLimit(limit);
-    return apiFetch<LoLMatch[]>(
-        `/players/lol/${puuid}/matches?limit=${effectiveLimit}`,
-    );
+    return apiFetch<LoLMatch[]>(`/players/lol/${puuid}/matches`, {
+        limit: effectiveLimit,
+    });
 }
 
 export function searchDota2Players(
@@ -63,20 +64,22 @@ export function searchDota2Players(
 ): Promise<Dota2PlayerSearchResult[]> {
     const effectiveLimit = setLimit(limit);
     checkName(name);
-    return apiFetch<Dota2PlayerSearchResult[]>(
-        `/players/dota2/search?name=${name}&limit=${effectiveLimit}`,
-    );
+    return apiFetch<Dota2PlayerSearchResult[]>("/players/dota2/search", {
+        name,
+        limit: effectiveLimit,
+    });
 }
 
 export function searchLoLPlayers(
     name: string,
     limit?: number,
-): Promise<LoLPlayerSearchResult> {
+): Promise<LoLPlayerSearchResult[]> {
     const effectiveLimit = setLimit(limit);
     checkName(name);
-    return apiFetch<LoLPlayerSearchResult[]>(
-        `/players/lol/search?name=${name}&limit=${effectiveLimit}`,
-    );
+    return apiFetch<LoLPlayerSearchResult[]>("/players/lol/search", {
+        name,
+        limit: effectiveLimit,
+    });
 }
 
 export function getDota2Match(match_id: number): Promise<Dota2Match[]> {
@@ -95,10 +98,10 @@ export function getDota2HeroStats(): Promise<Dota2HeroStats[]> {
     return apiFetch<Dota2HeroStats[]>("/meta/dota2/heroes/stats");
 }
 
-export function getLoLChampions(): Promise<LoLChampion> {
-    return apiFetch<LoLChampion>("/meta/lol/champions");
+export function getLoLChampions(): Promise<LoLChampion[]> {
+    return apiFetch<LoLChampion[]>("/meta/lol/champions");
 }
 
-export function getLoLChampionStats(): Promise<LoLChampionStats> {
-    return apiFetch<LoLChampionStats>("/meta/lol/champions/stats");
+export function getLoLChampionStats(): Promise<LoLChampionStats[]> {
+    return apiFetch<LoLChampionStats[]>("/meta/lol/champions/stats");
 }
