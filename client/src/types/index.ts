@@ -105,3 +105,16 @@ export interface ApiErrorResponse {
     detail?: unknown;
     details?: string;
 }
+
+export type Game = "dota2" | "lol";
+
+export interface MatchRow {
+    matchId: string;
+    game: Game;
+    characterName: string;
+    win: boolean;
+    kills: number;
+    deaths: number;
+    assists: number;
+    matchDate: string; // ISO 8601
+}
