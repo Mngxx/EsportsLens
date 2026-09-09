@@ -5,16 +5,24 @@ import {
     getLoLChampionStats,
 } from "../lib/api";
 import { useApi } from "./useApi";
-import type { Game } from "../types";
+import type {
+    Game,
+    Dota2Hero,
+    LoLChampion,
+    Dota2HeroStats,
+    LoLChampionStats,
+} from "../types";
 
-export function useMetaHeroes(game: Game) {
+export function useMetaHeroes(game: Game): Dota2Hero[] | LoLChampion[] {
     return useApi(
         () => (game === "dota2" ? getDota2Heroes() : getLoLChampions()),
         [game],
     );
 }
 
-export function useMetaHeroStats(game: Game) {
+export function useMetaHeroStats(
+    game: Game,
+): Dota2HeroStats[] | LoLChampionStats[] {
     return useApi(
         () => (game === "dota2" ? getDota2HeroStats() : getLoLChampionStats()),
         [game],
