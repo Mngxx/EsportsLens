@@ -19,7 +19,7 @@ interface UseApiState<T> {
  * before any player has been selected/searched) — when false, returns the
  * initial idle state and never calls fetchFn.
  */
-function useApi<T>(
+export function useApi<T>(
     fetchFn: () => Promise<T>,
     deps: DependencyList,
     enabled: boolean = true,
@@ -48,7 +48,10 @@ function useApi<T>(
                     setState({
                         data: null,
                         loading: false,
-                        error: error instanceof Error ? error : new Error(String(error)),
+                        error:
+                            error instanceof Error
+                                ? error
+                                : new Error(String(error)),
                     });
                 }
             });
@@ -63,5 +66,3 @@ function useApi<T>(
 
     return state;
 }
-
-export default useApi;

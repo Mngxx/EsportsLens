@@ -13,17 +13,15 @@ import type {
     LoLChampionStats,
 } from "../types";
 
-export function useMetaHeroes(game: Game): Dota2Hero[] | LoLChampion[] {
-    return useApi(
+export function useMetaHeroes(game: Game) {
+    return useApi<Dota2Hero[] | LoLChampion[]>(
         () => (game === "dota2" ? getDota2Heroes() : getLoLChampions()),
         [game],
     );
 }
 
-export function useMetaHeroStats(
-    game: Game,
-): Dota2HeroStats[] | LoLChampionStats[] {
-    return useApi(
+export function useMetaHeroStats(game: Game) {
+    return useApi<Dota2HeroStats[] | LoLChampionStats[]>(
         () => (game === "dota2" ? getDota2HeroStats() : getLoLChampionStats()),
         [game],
     );
