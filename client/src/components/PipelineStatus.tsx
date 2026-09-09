@@ -43,13 +43,17 @@ function PipelineStatus({ lastRun }: PipelineStatusProps) {
         <div className="flex items-center gap-2 text-xs text-zinc-500">
             <span
                 className={
-                    formatRelativeTime(lastRun ?? "") === "just now"
+                    lastRun
                         ? "h-2 w-2 rounded-full bg-emerald-400"
                         : "h-2 w-2 rounded-full bg-zinc-600"
                 }
             />
 
-            <span>{lastRun ? "" : "No ingestion data yet"}</span>
+            <span>
+                {lastRun
+                    ? formatRelativeTime(lastRun)
+                    : "No ingestion data yet"}
+            </span>
         </div>
     );
 }

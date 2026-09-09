@@ -11,6 +11,17 @@ interface MatchTableProps {
 // in local state, and sort a copy of `matches` before mapping — don't mutate
 // the prop array in place.
 
+function toISODateTime(date: string): string {
+    return new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: false,
+    }).format(new Date(date));
+}
+
 function MatchTable({ matches, loading }: MatchTableProps) {
     if (loading) {
         return <p className="text-sm text-zinc-500">Loading matches…</p>;
@@ -20,19 +31,6 @@ function MatchTable({ matches, loading }: MatchTableProps) {
         return <p className="text-sm text-zinc-500">No matches found.</p>;
     }
 
-    function toISODateTime(date: string): string {
-        return new Intl.DateTimeFormat("sv-SE", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: false,
-        })
-            .format(new Date(date))
-            .replace(" ", "T");
-    }
     return (
         <table className="w-full text-left text-sm">
             <thead>
@@ -69,7 +67,6 @@ function MatchTable({ matches, loading }: MatchTableProps) {
                         <td className="py-2 text-zinc-500">
                             {toISODateTime(match.matchDate)}
                         </td>
-                        <td className="py-2 text-zinc-500"></td>
                     </tr>
                 ))}
             </tbody>

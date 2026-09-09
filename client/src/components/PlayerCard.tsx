@@ -23,7 +23,7 @@ function PlayerCard({ game, playerName, stats }: PlayerCardProps) {
             style: "percent",
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
-        }).format(num / 100);
+        }).format(num);
     };
     return (
         <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
