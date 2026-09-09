@@ -1,10 +1,4 @@
-import type { Game } from "../types";
-
-interface PlayerStats {
-    winRate: number; // 0-1
-    avgKda: number;
-    matchesPlayed: number;
-}
+import type { Game, PlayerStats } from "../types";
 
 interface PlayerCardProps {
     game: Game;

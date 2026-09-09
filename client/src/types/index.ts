@@ -108,6 +108,12 @@ export interface ApiErrorResponse {
 
 export type Game = "dota2" | "lol";
 
+export interface PlayerStats {
+    winRate: number; // 0-1
+    avgKda: number;
+    matchesPlayed: number;
+}
+
 export interface MatchRow {
     matchId: string;
     game: Game;
