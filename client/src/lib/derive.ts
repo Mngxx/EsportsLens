@@ -68,7 +68,8 @@ export function derivePlayerStats(
 
     let avgKda = 0;
     if (game === "dota2") {
-        const kda = matches.reduce((acc, m) => acc + m.kda, 0);
+        const dota2Matches = matches as Dota2Match[];
+        const kda = dota2Matches.reduce((acc, m) => acc + m.kda, 0);
         avgKda = kda / matches.length;
     } else {
         const kda = matches.reduce(
