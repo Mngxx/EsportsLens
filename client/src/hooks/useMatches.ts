@@ -6,6 +6,7 @@ export function usePlayerMatches(
     game: Game,
     id: string | number,
     limit?: number,
+    enabled: boolean = true,
 ) {
     return useApi<Dota2Match[] | LoLMatch[]>(
         () =>
@@ -13,5 +14,6 @@ export function usePlayerMatches(
                 ? getDota2PlayerMatches(id as number, limit)
                 : getLoLPlayerMatches(id as string, limit),
         [game, id, limit],
+        enabled,
     );
 }
