@@ -114,6 +114,16 @@ export interface PlayerStats {
     matchesPlayed: number;
 }
 
+// Normalized shape for PickWinScatter/HeroChampionGrid — Dota2HeroStats and
+// LoLChampionStats agree on pick_rate/win_rate but differ on id/name field
+// names (hero_id/hero_name vs champion_id/champion_name).
+export interface HeroChampionStat {
+    id: number;
+    name: string;
+    pickRate: number; // 0-1
+    winRate: number | null; // null for a Dota2 hero with zero pro picks/bans
+}
+
 export interface MatchRow {
     matchId: string;
     game: Game;
