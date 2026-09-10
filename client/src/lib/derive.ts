@@ -1,6 +1,9 @@
 import type {
+    Dota2HeroStats,
     Dota2Match,
     Game,
+    HeroChampionStat,
+    LoLChampionStats,
     LoLMatch,
     MatchRow,
     PlayerStats,
@@ -83,5 +86,32 @@ export function derivePlayerStats(
         winRate,
         avgKda,
         matchesPlayed: matches.length,
+    };
+}
+
+/**
+ * Normalizes one hero/champion stats row for PickWinScatter/HeroChampionGrid,
+ * so those components never have to branch on `game` themselves.
+ */
+export function toHeroChampionStat(
+    stat: Dota2HeroStats | LoLChampionStats,
+    game: Game,
+): HeroChampionStat {
+    if (game === "dota2") {
+        const s = stat as Dota2HeroStats;
+        return {
+            id: s.hero_id,
+            name: s.hero_name,
+            pickRate: s.pick_rate,
+            winRate: s.win_rate,
+        };
+    }
+
+    const s = stat as LoLChampionStats;
+    return {
+        id: s.champion_id,
+        name: s.champion_name,
+        pickRate: s.pick_rate,
+        winRate: s.win_rate,
     };
 }
