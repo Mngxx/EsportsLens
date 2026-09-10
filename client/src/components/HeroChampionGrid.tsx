@@ -18,7 +18,7 @@ function HeroChampionGrid({ stats }: HeroChampionGridProps) {
                     <div className="mt-2 flex justify-between text-xs text-zinc-500">
                         <span>Pick — {Math.round(stat.pickRate * 100)}%</span>
                         <span>
-                            Win —
+                            Win —{" "}
                             {stat.winRate != null
                                 ? `${Math.round(stat.winRate * 100)}%`
                                 : "—"}
