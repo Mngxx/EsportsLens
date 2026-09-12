@@ -112,13 +112,13 @@ class LoLPlayerSearchSchema(BaseModel):
 
 class Dota2MatchSummarySchema(BaseModel):
     match_id: str
-    match_Date: datetime
+    match_date: datetime
     duration_secs: int
     winning_team: str
 
 
 class LoLMatchSummarySchema(BaseModel):
     match_id: str
-    match_Date: datetime
+    match_date: datetime
     duration_secs: int
-    winning_team_id: str
+    winning_team_id: int
