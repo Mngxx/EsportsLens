@@ -13,24 +13,22 @@ function Meta() {
     const stats: HeroChampionStat[] =
         heroStats.data?.map((s) => toHeroChampionStat(s, game)) ?? [];
 
-    // Section 11 wants 3 views beyond the raw scatter — all are just sorts/
-    // slices of `stats`, nothing new to fetch. Watch out for `winRate` being
-    // nullable (a Dota2 hero with zero pro picks/bans) when sorting/filtering
-    // on it — decide how those should be treated (excluded vs. sorted last).
+    const withWinRate = stats.filter(
+        (s): s is HeroChampionStat & { winRate: number } => s.winRate !== null,
+    );
 
-    const topByWinRate: HeroChampionStat[] = stats
-        .sort((a, b) => b.winRate! - a.winRate!)
+    const topByWinRate: HeroChampionStat[] = [...withWinRate]
+        .sort((a, b) => b.winRate - a.winRate)
         .slice(0, 10);
-    const topByPickRate: HeroChampionStat[] = stats
-        .sort((a, b) => b.pickRate! - a.pickRate!)
+    const topByPickRate: HeroChampionStat[] = [...stats]
+        .sort((a, b) => b.pickRate - a.pickRate)
         .slice(0, 10);
 
-    const avgWinRate =
-        stats.reduce((sum, s) => sum + s.winRate!, 0) / stats.length;
-
-    const traps: HeroChampionStat[] = topByWinRate
-        .filter((s) => s.winRate! < avgWinRate)
-        .sort((a, b) => a.winRate! - b.winRate!)
+    const highPickPool = [...withWinRate]
+        .sort((a, b) => b.pickRate - a.pickRate)
+        .slice(0, 10);
+    const traps: HeroChampionStat[] = [...highPickPool]
+        .sort((a, b) => a.winRate - b.winRate)
         .slice(0, 5);
 
     return (
