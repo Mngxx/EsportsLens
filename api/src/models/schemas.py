@@ -108,3 +108,17 @@ class Dota2PlayerSearchSchema(BaseModel):
 class LoLPlayerSearchSchema(BaseModel):
     puuid: str
     player_name: str
+
+
+class Dota2MatchSummarySchema(BaseModel):
+    match_id: str
+    match_Date: datetime
+    duration_secs: int
+    winning_team: str
+
+
+class LoLMatchSummarySchema(BaseModel):
+    match_id: str
+    match_Date: datetime
+    duration_secs: int
+    winning_team_id: str
