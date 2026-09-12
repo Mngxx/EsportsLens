@@ -131,3 +131,25 @@ def make_lol_player_search_row(**overrides):
     }
     row.update(overrides)
     return row
+
+
+def make_dota2_match_summary_row(**overrides):
+    row = {
+        "match_id": "123",
+        "match_date": "2026-08-01T12:00:00",
+        "duration_secs": 2400,
+        "winning_team": "radiant",
+    }
+    row.update(overrides)
+    return row
+
+
+def make_lol_match_summary_row(**overrides):
+    row = {
+        "match_id": "abc123",
+        "match_date": "2026-08-01T12:00:00",
+        "duration_secs": 1800,
+        "winning_team_id": 100,
+    }
+    row.update(overrides)
+    return row
