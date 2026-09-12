@@ -17,11 +17,21 @@ function Meta() {
     // slices of `stats`, nothing new to fetch. Watch out for `winRate` being
     // nullable (a Dota2 hero with zero pro picks/bans) when sorting/filtering
     // on it — decide how those should be treated (excluded vs. sorted last).
-    //
 
-    const topByWinRate: HeroChampionStat[] = [];
-    const topByPickRate: HeroChampionStat[] = [];
-    const traps: HeroChampionStat[] = [];
+    const topByWinRate: HeroChampionStat[] = stats
+        .sort((a, b) => b.winRate! - a.winRate!)
+        .slice(0, 10);
+    const topByPickRate: HeroChampionStat[] = stats
+        .sort((a, b) => b.pickRate! - a.pickRate!)
+        .slice(0, 10);
+
+    const avgWinRate =
+        stats.reduce((sum, s) => sum + s.winRate!, 0) / stats.length;
+
+    const traps: HeroChampionStat[] = topByWinRate
+        .filter((s) => s.winRate! < avgWinRate)
+        .sort((a, b) => a.winRate! - b.winRate!)
+        .slice(0, 5);
 
     return (
         <div className="space-y-8">
