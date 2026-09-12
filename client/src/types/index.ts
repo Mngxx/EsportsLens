@@ -101,6 +101,20 @@ export interface LoLPlayerSearchResult {
     player_name: string;
 }
 
+export interface Dota2MatchSummary {
+    match_id: string;
+    match_date: string;
+    duration_secs: number;
+    winning_team: "radiant" | "dire";
+}
+
+export interface LoLMatchSummary {
+    match_id: string;
+    match_date: string;
+    duration_secs: number;
+    winning_team_id: number;
+}
+
 export interface ApiErrorResponse {
     detail?: unknown;
     details?: string;
