@@ -3,10 +3,12 @@ import type {
     Dota2Hero,
     Dota2HeroStats,
     Dota2Match,
+    Dota2MatchSummary,
     Dota2PlayerSearchResult,
     LoLChampion,
     LoLChampionStats,
     LoLMatch,
+    LoLMatchSummary,
     LoLPlayerSearchResult,
 } from "../types";
 import { API_URL } from "../config";
@@ -104,4 +106,22 @@ export function getLoLChampions(): Promise<LoLChampion[]> {
 
 export function getLoLChampionStats(): Promise<LoLChampionStats[]> {
     return apiFetch<LoLChampionStats[]>("/meta/lol/champions/stats");
+}
+
+export function getRecentDota2Matches(
+    limit?: number,
+): Promise<Dota2MatchSummary[]> {
+    const effectiveLimit = setLimit(limit);
+    return apiFetch<Dota2MatchSummary[]>("/matches/dota2/recent", {
+        limit: effectiveLimit,
+    });
+}
+
+export function getRecentLoLMatches(
+    limit?: number,
+): Promise<LoLMatchSummary[]> {
+    const effectiveLimit = setLimit(limit);
+    return apiFetch<LoLMatchSummary[]>("/matches/lol/recent", {
+        limit: effectiveLimit,
+    });
 }
