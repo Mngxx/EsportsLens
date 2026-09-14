@@ -138,6 +138,41 @@ export interface HeroChampionStat {
     winRate: number | null; // null for a Dota2 hero with zero pro picks/bans
 }
 
+export interface Dota2TopPlayer {
+    account_id: number;
+    player_name: string;
+    avg_kda: number;
+}
+
+export interface Dota2MostPicked {
+    hero_id: number;
+    pick_count: number;
+}
+
+export interface Dota2DashboardSummary {
+    matches_today: number;
+    top_players_by_kda: Dota2TopPlayer[];
+    most_picked_hero: Dota2MostPicked | null;
+}
+
+export interface LoLTopPlayer {
+    puuid: string;
+    player_name: string;
+    avg_kda: number;
+}
+
+export interface LoLMostPicked {
+    champion_id: number;
+    champion_name: string;
+    pick_count: number;
+}
+
+export interface LoLDashboardSummary {
+    matches_today: number;
+    top_players_by_kda: LoLTopPlayer[];
+    most_picked_champion: LoLMostPicked | null;
+}
+
 export interface MatchRow {
     matchId: string;
     game: Game;
