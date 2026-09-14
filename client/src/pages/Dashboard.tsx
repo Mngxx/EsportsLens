@@ -80,8 +80,11 @@ function Dashboard() {
                                 </h3>
                                 {dota2.data.most_picked_hero ? (
                                     <p className="text-sm text-zinc-300">
-                                        Hero #{dota2HeroLookup?.[heroId] ?? ""}
-                                        {dota2.data.most_picked_hero.hero_id} —{" "}
+                                        {dota2HeroLookup?.[
+                                            dota2.data.most_picked_hero.hero_id
+                                        ] ??
+                                            `Hero #${dota2.data.most_picked_hero.hero_id}`}{" "}
+                                        —{" "}
                                         {dota2.data.most_picked_hero.pick_count}{" "}
                                         picks
                                     </p>
