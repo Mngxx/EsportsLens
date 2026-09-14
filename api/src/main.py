@@ -1,7 +1,7 @@
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from db.athena import AthenaQueryError
-from routes import players, matches, meta
+from routes import players, matches, meta, dashboard
 from mangum import Mangum
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,6 +16,7 @@ app.add_middleware(
 app.include_router(players.router)
 app.include_router(matches.router)
 app.include_router(meta.router)
+app.include_router(dashboard.router)
 
 
 @app.get("/health", status_code=status.HTTP_200_OK)
