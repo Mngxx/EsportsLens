@@ -153,3 +153,42 @@ def make_lol_match_summary_row(**overrides):
     }
     row.update(overrides)
     return row
+
+
+def make_dota2_top_player_row(**overrides):
+    row = {
+        "account_id": 3456,
+        "player_name": "test_player_1",
+        "avg_kda": 4.5,
+    }
+    row.update(overrides)
+    return row
+
+
+def make_lol_top_player_row(**overrides):
+    row = {
+        "puuid": "puuid-xyz-789",
+        "player_name": "test_player_1#NA1",
+        "avg_kda": 3.2,
+    }
+    row.update(overrides)
+    return row
+
+
+def make_dota2_most_picked_row(**overrides):
+    row = {
+        "hero_id": 6,
+        "pick_count": 15,
+    }
+    row.update(overrides)
+    return row
+
+
+def make_lol_most_picked_row(**overrides):
+    row = {
+        "champion_id": 157,
+        "champion_name": "Yasuo",
+        "pick_count": 20,
+    }
+    row.update(overrides)
+    return row
