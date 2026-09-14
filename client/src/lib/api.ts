@@ -1,5 +1,6 @@
 import type {
     ApiErrorResponse,
+    Dota2DashboardSummary,
     Dota2Hero,
     Dota2HeroStats,
     Dota2Match,
@@ -7,6 +8,7 @@ import type {
     Dota2PlayerSearchResult,
     LoLChampion,
     LoLChampionStats,
+    LoLDashboardSummary,
     LoLMatch,
     LoLMatchSummary,
     LoLPlayerSearchResult,
@@ -124,4 +126,12 @@ export function getRecentLoLMatches(
     return apiFetch<LoLMatchSummary[]>("/matches/lol/recent", {
         limit: effectiveLimit,
     });
+}
+
+export function getDota2DashboardSummary(): Promise<Dota2DashboardSummary> {
+    return apiFetch<Dota2DashboardSummary>("/dashboard/dota2/summary");
+}
+
+export function getLoLDashboardSummary(): Promise<LoLDashboardSummary> {
+    return apiFetch<LoLDashboardSummary>("/dashboard/lol/summary");
 }
