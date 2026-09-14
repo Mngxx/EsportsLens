@@ -30,15 +30,15 @@ def get_dota2_dashboard_summary() -> Dota2DashboardSummarySchema:
 @router.get("/lol/summary", response_model=LoLDashboardSummarySchema)
 def get_lol_dashboard_summary() -> LoLDashboardSummarySchema:
     matches_today = run_query(
-        "SELECT COUNT(DISTINCT match_id) AS matches_today FROM lol_matches WHERE date(match_date) = current_date"
+        "SELECT COUNT(DISTINCT match_id) AS matches_today FROM league_of_legends_matches WHERE date(match_date) = current_date"
     )
     top_players = run_query(
-        "SELECT puuid, player_name, AVG((kills + assists) / GREATEST(deaths, 1)) AS avg_kda FROM lol_matches "
+        "SELECT puuid, player_name, AVG((kills + assists) / GREATEST(deaths, 1)) AS avg_kda FROM league_of_legends_matches "
         "WHERE match_date >= date_add('day', -7, current_date) "
         "GROUP BY puuid, player_name ORDER BY avg_kda DESC LIMIT 5"
     )
     most_picked = run_query(
-        "SELECT champion_id, champion_name, COUNT(*) AS pick_count FROM lol_matches "
+        "SELECT champion_id, champion_name, COUNT(*) AS pick_count FROM league_of_legends_matches "
         "WHERE match_date >= date_add('day', -7, current_date) "
         "GROUP BY champion_id, champion_name ORDER BY pick_count DESC LIMIT 1"
     )
