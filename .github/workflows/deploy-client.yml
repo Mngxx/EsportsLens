@@ -1,0 +1,28 @@
+name: Deploy Client
+on:
+  push:
+    branches: [main]
+    paths:
+      - "client/**"
+      - ".github/workflows/deploy-client.yml"
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: npm install
+      # TODO (Week 5 Day 1-2): add `npm test` (Vitest) here once test files
+      # exist — client/ has no test setup at all yet (no Vitest config, no
+      # test script, no *.test.ts files). See Section 13 in the plan doc.
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npm run build
+      # No explicit deploy step — Vercel's own GitHub integration watches
+      # this repo separately and deploys on push once the project is linked;
+      # this workflow only exists to gate main on a clean build.
