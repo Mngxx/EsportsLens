@@ -2,7 +2,12 @@ from fastapi.testclient import TestClient
 from src.main import app
 from unittest.mock import patch
 from db.athena import AthenaQueryError
-from tests.conftest import make_dota2_match_row, make_lol_match_row
+from tests.conftest import (
+    make_dota2_match_row,
+    make_lol_match_row,
+    make_dota2_player_search_row,
+    make_lol_player_search_row,
+)
 
 client = TestClient(app)
 
@@ -147,3 +152,151 @@ def test_get_lol_players_limit_exceeds_max():
         response = client.get("players/lol/puuid-xyz-789/matches?limit=51")
         assert response.status_code == 422
         mock_run_query.assert_not_called()
+
+
+def test_search_dota2_players():
+    with patch("routes.players.run_query") as mock_run_query:
+        mock_run_query.return_value = [
+            make_dota2_player_search_row(account_id=3456, player_name="testplayer"),
+            make_dota2_player_search_row(account_id=7890, player_name="testplayer2"),
+        ]
+        response = client.get("players/dota2/search?name=test")
+        assert response.status_code == 200
+        assert response.json() == [
+            make_dota2_player_search_row(account_id=3456, player_name="testplayer"),
+            make_dota2_player_search_row(account_id=7890, player_name="testplayer2"),
+        ]
+        mock_run_query.assert_called_once_with(
+            "SELECT DISTINCT account_id, player_name FROM dota2_matches "
+            "WHERE LOWER(player_name) LIKE LOWER('%test%') "
+            "ORDER BY player_name DESC LIMIT 10"
+        )
+
+
+def test_search_dota2_players_no_results():
+    with patch("routes.players.run_query") as mock_run_query:
+        mock_run_query.return_value = []
+        response = client.get("players/dota2/search?name=nosuchplayer")
+        assert response.status_code == 200
+        assert response.json() == []
+
+
+def test_search_dota2_players_athena_failure():
+    with patch("routes.players.run_query") as mock_run_query:
+        mock_run_query.side_effect = AthenaQueryError(
+            "Query 123 finished with state: FAILED"
+        )
+        response = client.get("players/dota2/search?name=test")
+        assert response.status_code == 502
+        assert response.json() == {"details": "Query 123 finished with state: FAILED"}
+
+
+def test_search_dota2_players_name_too_short_rejected():
+    with patch("routes.players.run_query") as mock_run_query:
+        response = client.get("players/dota2/search?name=ab")
+        assert response.status_code == 422
+        mock_run_query.assert_not_called()
+
+
+def test_search_dota2_players_name_missing_rejected():
+    with patch("routes.players.run_query") as mock_run_query:
+        response = client.get("players/dota2/search")
+        assert response.status_code == 422
+        mock_run_query.assert_not_called()
+
+
+def test_search_dota2_players_limit_exceeds_max():
+    with patch("routes.players.run_query") as mock_run_query:
+        response = client.get("players/dota2/search?name=test&limit=51")
+        assert response.status_code == 422
+        mock_run_query.assert_not_called()
+
+
+def test_search_dota2_players_quote_in_name_escaped():
+    with patch("routes.players.run_query") as mock_run_query:
+        mock_run_query.return_value = []
+        response = client.get("players/dota2/search?name=o'brien")
+        assert response.status_code == 200
+        mock_run_query.assert_called_once_with(
+            "SELECT DISTINCT account_id, player_name FROM dota2_matches "
+            "WHERE LOWER(player_name) LIKE LOWER('%o''brien%') "
+            "ORDER BY player_name DESC LIMIT 10"
+        )
+
+
+def test_search_lol_players():
+    with patch("routes.players.run_query") as mock_run_query:
+        mock_run_query.return_value = [
+            make_lol_player_search_row(
+                puuid="puuid-xyz-789", player_name="testplayer#NA1"
+            ),
+            make_lol_player_search_row(
+                puuid="puuid-abc-456", player_name="testplayer2#NA1"
+            ),
+        ]
+        response = client.get("players/lol/search?name=test")
+        assert response.status_code == 200
+        assert response.json() == [
+            make_lol_player_search_row(
+                puuid="puuid-xyz-789", player_name="testplayer#NA1"
+            ),
+            make_lol_player_search_row(
+                puuid="puuid-abc-456", player_name="testplayer2#NA1"
+            ),
+        ]
+        mock_run_query.assert_called_once_with(
+            "SELECT DISTINCT puuid, player_name FROM league_of_legends_matches "
+            "WHERE LOWER(player_name) LIKE LOWER('%test%') "
+            "ORDER BY player_name DESC LIMIT 10"
+        )
+
+
+def test_search_lol_players_no_results():
+    with patch("routes.players.run_query") as mock_run_query:
+        mock_run_query.return_value = []
+        response = client.get("players/lol/search?name=nosuchplayer")
+        assert response.status_code == 200
+        assert response.json() == []
+
+
+def test_search_lol_players_athena_failure():
+    with patch("routes.players.run_query") as mock_run_query:
+        mock_run_query.side_effect = AthenaQueryError(
+            "Query 123 finished with state: FAILED"
+        )
+        response = client.get("players/lol/search?name=test")
+        assert response.status_code == 502
+        assert response.json() == {"details": "Query 123 finished with state: FAILED"}
+
+
+def test_search_lol_players_name_too_short_rejected():
+    with patch("routes.players.run_query") as mock_run_query:
+        response = client.get("players/lol/search?name=ab")
+        assert response.status_code == 422
+        mock_run_query.assert_not_called()
+
+
+def test_search_lol_players_name_missing_rejected():
+    with patch("routes.players.run_query") as mock_run_query:
+        response = client.get("players/lol/search")
+        assert response.status_code == 422
+        mock_run_query.assert_not_called()
+
+
+def test_search_lol_players_limit_exceeds_max():
+    with patch("routes.players.run_query") as mock_run_query:
+        response = client.get("players/lol/search?name=test&limit=51")
+        assert response.status_code == 422
+        mock_run_query.assert_not_called()
+
+
+def test_search_lol_players_quote_in_name_escaped():
+    with patch("routes.players.run_query") as mock_run_query:
+        mock_run_query.return_value = []
+        response = client.get("players/lol/search?name=o'brien")
+        assert response.status_code == 200
+        mock_run_query.assert_called_once_with(
+            "SELECT DISTINCT puuid, player_name FROM league_of_legends_matches "
+            "WHERE LOWER(player_name) LIKE LOWER('%o''brien%') "
+            "ORDER BY player_name DESC LIMIT 10"
+        )

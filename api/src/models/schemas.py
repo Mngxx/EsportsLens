@@ -98,3 +98,62 @@ class LoLChampionStatsSchema(BaseModel):
     wins: int
     pick_rate: float
     win_rate: float
+
+
+class Dota2PlayerSearchSchema(BaseModel):
+    account_id: int
+    player_name: str
+
+
+class LoLPlayerSearchSchema(BaseModel):
+    puuid: str
+    player_name: str
+
+
+class Dota2MatchSummarySchema(BaseModel):
+    match_id: str
+    match_date: datetime
+    duration_secs: int
+    winning_team: str
+
+
+class LoLMatchSummarySchema(BaseModel):
+    match_id: str
+    match_date: datetime
+    duration_secs: int
+    winning_team_id: int
+
+
+class Dota2TopPlayerSchema(BaseModel):
+    account_id: int
+    player_name: str
+    avg_kda: float
+
+
+class Dota2MostPickedSchema(BaseModel):
+    hero_id: int
+    pick_count: int
+
+
+class Dota2DashboardSummarySchema(BaseModel):
+    matches_today: int
+    top_players_by_kda: list[Dota2TopPlayerSchema]
+    most_picked_hero: Dota2MostPickedSchema | None
+
+
+class LoLTopPlayerSchema(BaseModel):
+    puuid: str
+    player_name: str
+    avg_kda: float
+
+
+class LoLMostPickedSchema(BaseModel):
+    champion_id: int
+    champion_name: str
+    pick_count: int
+
+
+class LoLDashboardSummarySchema(BaseModel):
+    matches_today: int
+    top_players_by_kda: list[LoLTopPlayerSchema]
+    most_picked_champion: LoLMostPickedSchema | None
