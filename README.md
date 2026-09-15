@@ -1,7 +1,8 @@
 # EsportsLens
 
-> **Status: Weeks 1–3 Complete — Ingestion, ETL, Athena, and the API Live in Production**
-> Infrastructure, ingestion (S3 data lake + scheduled Lambda), ETL (Glue PySpark jobs → curated Parquet), querying (Athena, with partition projection), and the FastAPI backend (Lambda + API Gateway, 9 endpoints across players/matches/meta) are deployed and verified end-to-end against real data. Frontend is not yet built.
+> **Status: Weeks 1–4 Complete — Full Stack Live in Production**
+> Infrastructure, ingestion (S3 data lake + scheduled Lambda), ETL (Glue PySpark jobs → curated Parquet), querying (Athena, with partition projection), the FastAPI backend (Lambda + API Gateway, 15 endpoints across players/matches/meta/dashboard), and the React dashboard (Vercel) are deployed and verified end-to-end against real data.
+> **Live demo:** [client-mngxx1.vercel.app](https://client-mngxx1.vercel.app/)
 
 A player and match stats platform (tracker.gg-style) that ingests match data from public game APIs, processes it through an AWS data pipeline, and surfaces player performance, ladder standings, and match insights through a public REST API and interactive dashboard.
 
@@ -22,7 +23,7 @@ Built as a hands-on portfolio project to learn AWS data engineering end-to-end �
 3. AWS Glue (PySpark) transforms the raw JSON into cleaned, typed, partitioned Parquet
 4. AWS Athena runs SQL directly over the curated Parquet data — no database to manage
 5. A FastAPI backend (deployed on Lambda) queries Athena and serves results as JSON over REST
-6. A React dashboard visualizes player stats, match history, and hero/agent meta trends (pick rate vs. win rate)
+6. A React dashboard (Vite + TypeScript + Tailwind, hosted on Vercel) visualizes player stats, match history, and hero/champion meta trends (pick rate vs. win rate) — Dashboard, Players (search + stats + KDA trend), Matches (recent matches + full scoreboard detail), and Meta (pick/win rate scatter + leaderboards) pages, all backed by live Athena data
 
 ---
 
@@ -62,7 +63,7 @@ EsportsLens/
 
 ## Getting Started (Local Development)
 
-Ingestion, ETL, Athena, and the API are live end-to-end; the frontend isn't built yet, so this covers deploying/testing the pipeline through the API layer.
+Ingestion, ETL, Athena, the API, and the frontend are all live end-to-end.
 
 **Prerequisites:** AWS account with CLI configured (`aws configure`), Node.js 20+, Python 3.12, Docker Desktop (required for CDK's Lambda dependency bundling, and for local PySpark development via AWS's official `aws-glue-libs` image — there's no supported way to run real PySpark locally without it), a free [Riot Games dev API key](https://developer.riotgames.com) (expires every 24h — a production key requires app approval)
 
@@ -108,6 +109,15 @@ uvicorn main:app --reload
 # then open http://localhost:8000/docs for interactive Swagger UI
 ```
 
+```bash
+# Run the frontend locally against the API above
+cd client
+npm install
+npm run dev
+# then open http://localhost:5173 — needs client/.env.local with
+# VITE_API_URL=http://localhost:8000 (matching the uvicorn server above)
+```
+
 ---
 
 ## Roadmap
@@ -129,9 +139,10 @@ uvicorn main:app --reload
 - [x] pytest coverage with mocked Athena responses (32 tests: happy path, empty results, Athena failures, input-validation/injection-guard cases)
 - [x] CORS middleware (localhost + Vercel preview domains) and a GitHub Actions deploy workflow
 
-### Week 4 — Frontend Dashboard
-- [ ] React dashboard — Dashboard, Players, Matches, Meta pages
-- [ ] Deployed on Vercel, connected to the live API
+### Week 4 — Frontend Dashboard ✅ Complete
+- [x] React dashboard — Dashboard (both-games overview), Players (search + stats + KDA trend), Matches (recent + full match detail), Meta (pick/win rate scatter + leaderboards) pages
+- [x] Deployed on Vercel, connected to the live API (`client/` as the project's Root Directory, `vercel.json` SPA rewrite for React Router)
+- [x] 3 new API endpoint families added along the way, since the original Week 3 API only ever supported id-based lookups: player search by name, a recent-matches list per game, and a consolidated per-game dashboard summary (today's matches, top-5-by-KDA this week, most-picked hero/champion this week)
 
 ### Week 5 — CI/CD, Testing & Polish
 - [ ] Full test coverage across ingestion, API, and frontend
