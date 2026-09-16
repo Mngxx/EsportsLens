@@ -266,15 +266,22 @@ def test_ingest_league_of_legends_data_mixed_match_upload_results():
     fake_challenger = {"entries": [{"puuid": "my-puuid"}]}
     with (
         patch("src.handler.get_challenger_leagues", return_value=fake_challenger),
-        patch("src.handler.get_personal_match_list") as mock_get_matches,
-        patch("src.handler._fetch_and_upload_lol_match") as mock_fetch_and_upload,
+        patch(
+            "src.handler.get_personal_match_list", return_value=["m1", "m2"]
+        ) as mock_get_matches,
+        patch(
+            "src.handler._fetch_and_upload_lol_match", side_effect=[True, False]
+        ) as mock_fetch_and_upload,
     ):
         result = ingest_league_of_legends_data("my-bucket")
-        assert result == {
-            "players_processed": 1,
-            "matches_uploaded": 0,
-            "matches_failed": 0,
-        }
+
+    mock_get_matches.assert_called_once_with("asia", "my-puuid")
+    assert mock_fetch_and_upload.call_count == 2
+    assert result == {
+        "players_processed": 1,
+        "matches_uploaded": 1,
+        "matches_failed": 1,
+    }
 
 
 def test_ingest_league_of_legends_data_entry_missing_puuid_is_skipped():
