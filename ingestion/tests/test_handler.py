@@ -65,6 +65,34 @@ def test_ingest_dota_hero_data_success():
     assert mock_upload.call_count == 2
 
 
+def test_ingest_dota_hero_data_heroes_fetch_failure_still_tries_hero_stats():
+    fake_hero_stats = [{"hero_id": 1, "win_rate": 0.51}]
+
+    with (
+        patch("src.handler.get_heroes", return_value=None),
+        patch("src.handler.get_hero_stats", return_value=fake_hero_stats),
+        patch("src.handler.upload_json", return_value=True) as mock_upload,
+    ):
+        result = ingest_dota_hero_data("my-bucket")
+
+    assert result == {"heroes_uploaded": False, "hero_stats_uploaded": True}
+    assert mock_upload.call_count == 1
+
+
+def test_ingest_dota_hero_data_hero_stats_fetch_failure():
+    fake_heroes = [{"id": 1, "name": "Anti-Mage"}]
+
+    with (
+        patch("src.handler.get_heroes", return_value=fake_heroes),
+        patch("src.handler.get_hero_stats", return_value=None),
+        patch("src.handler.upload_json", return_value=True) as mock_upload,
+    ):
+        result = ingest_dota_hero_data("my-bucket")
+
+    assert result == {"heroes_uploaded": True, "hero_stats_uploaded": False}
+    assert mock_upload.call_count == 1
+
+
 def test_ingest_lol_champions_data_success():
     fake_version = "1.2"
     fake_champions = {"data": {"Aatrox": {}}}
@@ -76,6 +104,34 @@ def test_ingest_lol_champions_data_success():
         result = ingest_lol_champions_data("my-bucket")
     assert result == {"champions_uploaded": True}
     assert mock_upload.call_count == 1
+
+
+def test_ingest_lol_champions_data_version_fetch_failure():
+    fake_version = None
+    with (
+        patch("src.handler.get_current_version", return_value=fake_version),
+        patch("src.handler.get_champion_data") as mock_get_champion_data,
+        patch("src.handler.upload_json") as mock_upload,
+    ):
+        result = ingest_lol_champions_data("my-bucket")
+        assert result == {"champions_uploaded": False}
+        mock_get_champion_data.assert_not_called()
+        mock_upload.assert_not_called()
+    assert mock_upload.call_count == 0
+    assert mock_get_champion_data.call_count == 0
+    assert result == {"champions_uploaded": False}
+
+
+def test_ingest_lol_champions_data_champion_data_fetch_failure():
+    with (
+        patch("src.handler.get_current_version", return_value="1.2"),
+        patch("src.handler.get_champion_data", return_value=None),
+        patch("src.handler.upload_json") as mock_upload,
+    ):
+        result = ingest_lol_champions_data("my-bucket")
+
+    mock_upload.assert_not_called()
+    assert result == {"champions_uploaded": False}
 
 
 def test_fetch_and_upload_lol_match_success():
@@ -186,6 +242,39 @@ def test_ingest_league_of_legends_data_challenger_fetch_failure():
         "matches_uploaded": 0,
         "matches_failed": 0,
     }
+
+
+def test_ingest_league_of_legends_data_match_list_fetch_failure_is_skipped():
+    fake_challenger = {"entries": [{"puuid": "p1"}]}
+
+    with (
+        patch("src.handler.get_challenger_leagues", return_value=fake_challenger),
+        patch("src.handler.get_personal_match_list", return_value=None),
+        patch("src.handler._fetch_and_upload_lol_match") as mock_fu,
+    ):
+        result = ingest_league_of_legends_data("my-bucket")
+
+    mock_fu.assert_not_called()
+    assert result == {
+        "players_processed": 1,
+        "matches_uploaded": 0,
+        "matches_failed": 0,
+    }
+
+
+def test_ingest_league_of_legends_data_mixed_match_upload_results():
+    fake_challenger = {"entries": [{"puuid": "my-puuid"}]}
+    with (
+        patch("src.handler.get_challenger_leagues", return_value=fake_challenger),
+        patch("src.handler.get_personal_match_list") as mock_get_matches,
+        patch("src.handler._fetch_and_upload_lol_match") as mock_fetch_and_upload,
+    ):
+        result = ingest_league_of_legends_data("my-bucket")
+        assert result == {
+            "players_processed": 1,
+            "matches_uploaded": 0,
+            "matches_failed": 0,
+        }
 
 
 def test_ingest_league_of_legends_data_entry_missing_puuid_is_skipped():
