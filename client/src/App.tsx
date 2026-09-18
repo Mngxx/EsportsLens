@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom'
+import ErrorBoundary from './components/ErrorBoundary'
 import NavBar from './components/NavBar'
 import Dashboard from './pages/Dashboard'
 import Matches from './pages/Matches'
@@ -11,10 +12,38 @@ function App() {
       <NavBar />
       <main className="p-6">
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/players" element={<Players />} />
-          <Route path="/matches" element={<Matches />} />
-          <Route path="/meta" element={<Meta />} />
+          <Route
+            path="/"
+            element={
+              <ErrorBoundary>
+                <Dashboard />
+              </ErrorBoundary>
+            }
+          />
+          <Route
+            path="/players"
+            element={
+              <ErrorBoundary>
+                <Players />
+              </ErrorBoundary>
+            }
+          />
+          <Route
+            path="/matches"
+            element={
+              <ErrorBoundary>
+                <Matches />
+              </ErrorBoundary>
+            }
+          />
+          <Route
+            path="/meta"
+            element={
+              <ErrorBoundary>
+                <Meta />
+              </ErrorBoundary>
+            }
+          />
         </Routes>
       </main>
     </div>
