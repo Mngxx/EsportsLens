@@ -84,6 +84,11 @@ function Matches() {
                             {recent.error.message}
                         </p>
                     )}
+                    {!recent.loading && recent.data?.length === 0 && (
+                        <p className="text-sm text-zinc-500">
+                            No recent matches found.
+                        </p>
+                    )}
                     {recent.data?.map((match) => (
                         <button
                             key={match.match_id}
