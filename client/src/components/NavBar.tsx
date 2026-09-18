@@ -9,7 +9,7 @@ const links = [
 
 function NavBar() {
     return (
-        <nav className="flex gap-6 border-b border-zinc-800 px-6 py-4">
+        <nav className="flex gap-4 overflow-x-auto border-b border-zinc-800 px-4 py-4 sm:gap-6 sm:px-6">
             {links.map(({ to, label, end }) => (
                 <NavLink
                     key={to}

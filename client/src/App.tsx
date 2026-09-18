@@ -10,7 +10,7 @@ function App() {
   return (
     <div className="min-h-screen bg-zinc-950">
       <NavBar />
-      <main className="p-6">
+      <main className="p-4 sm:p-6">
         <Routes>
           <Route
             path="/"
