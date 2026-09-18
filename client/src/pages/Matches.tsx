@@ -1,6 +1,7 @@
 import { useState } from "react";
 import GameSelector from "../components/GameSelector";
 import MatchTable from "../components/MatchTable";
+import Skeleton from "../components/Skeleton";
 import { useMatch, useRecentMatches } from "../hooks/useMatches";
 import { useMetaHeroes } from "../hooks/useMeta";
 import { toMatchRow } from "../lib/derive";
@@ -74,11 +75,10 @@ function Matches() {
 
             {!selectedMatchId && (
                 <div className="space-y-1">
-                    {recent.loading && (
-                        <p className="text-sm text-zinc-500">
-                            Loading matches…
-                        </p>
-                    )}
+                    {recent.loading &&
+                        Array.from({ length: 8 }).map((_, i) => (
+                            <Skeleton key={i} className="h-10 w-full" />
+                        ))}
                     {recent.error && (
                         <p className="text-sm text-rose-400">
                             {recent.error.message}

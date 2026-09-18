@@ -4,6 +4,7 @@ import SearchBar from "../components/SearchBar";
 import PlayerCard from "../components/PlayerCard";
 import MatchTable from "../components/MatchTable";
 import KDATrendLine from "../components/KDATrendLine";
+import Skeleton from "../components/Skeleton";
 import { usePlayerSearch } from "../hooks/usePlayers";
 import { usePlayerMatches } from "../hooks/useMatches";
 import { useMetaHeroes } from "../hooks/useMeta";
@@ -86,9 +87,10 @@ function Players() {
 
             {query && !selectedPlayer && (
                 <div className="space-y-1">
-                    {search.loading && (
-                        <p className="text-sm text-zinc-500">Searching…</p>
-                    )}
+                    {search.loading &&
+                        Array.from({ length: 5 }).map((_, i) => (
+                            <Skeleton key={i} className="h-9 w-full" />
+                        ))}
                     {search.error && (
                         <p className="text-sm text-rose-400">
                             {search.error.message}
@@ -135,7 +137,17 @@ function Players() {
                     </button>
 
                     {matches.loading && (
-                        <p className="text-sm text-zinc-500">Loading player…</p>
+                        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+                            <div className="flex items-center justify-between">
+                                <Skeleton className="h-6 w-32" />
+                                <Skeleton className="h-3 w-16" />
+                            </div>
+                            <div className="mt-4 grid grid-cols-3 gap-4">
+                                {Array.from({ length: 3 }).map((_, i) => (
+                                    <Skeleton key={i} className="h-8 w-full" />
+                                ))}
+                            </div>
+                        </div>
                     )}
                     {matches.error && (
                         <p className="text-sm text-rose-400">
@@ -151,7 +163,7 @@ function Players() {
                         />
                     )}
 
-                    {matchRows.length > 0 && (
+                    {(matches.loading || matchRows.length > 0) && (
                         <>
                             <KDATrendLine matches={matchRows} />
                             <MatchTable
