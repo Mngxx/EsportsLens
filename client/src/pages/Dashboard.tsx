@@ -1,10 +1,34 @@
 import PipelineStatus from "../components/PipelineStatus";
+import Skeleton from "../components/Skeleton";
 import {
     useDota2DashboardSummary,
     useLoLDashboardSummary,
 } from "../hooks/useDashboard";
 import { useMetaHeroes } from "../hooks/useMeta";
 import type { Dota2Hero } from "../types";
+
+function DashboardSummarySkeleton() {
+    return (
+        <>
+            <div>
+                <Skeleton className="h-8 w-12" />
+                <Skeleton className="mt-2 h-3 w-20" />
+            </div>
+            <div>
+                <Skeleton className="mb-2 mt-4 h-3 w-32" />
+                <div className="space-y-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                        <Skeleton key={i} className="h-4 w-full" />
+                    ))}
+                </div>
+            </div>
+            <div>
+                <Skeleton className="mb-2 mt-4 h-3 w-40" />
+                <Skeleton className="h-4 w-48" />
+            </div>
+        </>
+    );
+}
 
 function Dashboard() {
     const dota2 = useDota2DashboardSummary();
@@ -37,9 +61,7 @@ function Dashboard() {
                         Dota 2
                     </h2>
 
-                    {dota2.loading && (
-                        <p className="text-sm text-zinc-500">Loading…</p>
-                    )}
+                    {dota2.loading && <DashboardSummarySkeleton />}
                     {dota2.error && (
                         <p className="text-sm text-rose-400">
                             {dota2.error.message}
@@ -103,9 +125,7 @@ function Dashboard() {
                         League of Legends
                     </h2>
 
-                    {lol.loading && (
-                        <p className="text-sm text-zinc-500">Loading…</p>
-                    )}
+                    {lol.loading && <DashboardSummarySkeleton />}
                     {lol.error && (
                         <p className="text-sm text-rose-400">
                             {lol.error.message}
