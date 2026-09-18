@@ -124,6 +124,8 @@ def transform_matches(df: DataFrame) -> DataFrame:
         col("duration_secs"),
         (col("start_time") / 1000).cast("timestamp").alias("match_date"),
     )
+    # Same re-ingestion overlap as Dota2 (see dota2_transform.py) — dedupe.
+    matches_df = matches_df.dropDuplicates(["match_id", "puuid"])
     return matches_df
 
 
