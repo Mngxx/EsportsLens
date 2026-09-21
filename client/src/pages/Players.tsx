@@ -58,13 +58,17 @@ function Players() {
         );
     }
 
-
     const matchRows =
         matches.data?.map((m) => toMatchRow(m, game, dota2HeroLookup)) ?? [];
     const stats = matches.data ? derivePlayerStats(matches.data, game) : null;
 
     function handleSelectResult(id: string | number, name: string) {
         setSelectedPlayer({ id, name });
+    }
+
+    function handleSearch(newQuery: string) {
+        setQuery(newQuery);
+        setSelectedPlayer(null);
     }
 
     return (
@@ -77,7 +81,7 @@ function Players() {
             </div>
 
             <SearchBar
-                onSearch={setQuery}
+                onSearch={handleSearch}
                 placeholder={
                     game === "dota2"
                         ? "Search Dota 2 players…"
