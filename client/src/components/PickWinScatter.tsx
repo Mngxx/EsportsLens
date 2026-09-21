@@ -60,6 +60,9 @@ function PickWinScatter({ stats }: PickWinScatterProps) {
                     name="Win Rate"
                     stroke="#71717a"
                     tick={{ fontSize: 12 }}
+                    tickFormatter={(value: number) =>
+                        `${Math.round(value * 100)}%`
+                    }
                 />
                 <Tooltip
                     cursor={{ strokeDasharray: "3 3" }}
