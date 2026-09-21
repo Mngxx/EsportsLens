@@ -18,6 +18,7 @@ jobs:
         with:
           node-version: "24"
       - run: npm install
+      - run: npm run format:check
       - run: npm test
       - run: npx tsc --noEmit -p tsconfig.app.json
       - run: npm run build
