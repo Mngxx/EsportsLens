@@ -92,9 +92,7 @@ function MatchTable({ matches, loading }: MatchTableProps) {
                     <thead>
                         <tr className="border-b border-zinc-800 text-zinc-500">
                             <th className="py-2 font-medium">Result</th>
-                            <th className="py-2 font-medium">
-                                Hero/Champion
-                            </th>
+                            <th className="py-2 font-medium">Hero/Champion</th>
                             <th className="py-2 font-medium">K/D/A</th>
                             <th className="py-2 font-medium">Date</th>
                         </tr>
