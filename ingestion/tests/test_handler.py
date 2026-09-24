@@ -314,8 +314,12 @@ def test_lambda_handler_all_succeed():
             "src.handler.ingest_lol_champions_data",
             return_value={"champions_uploaded": True},
         ),
+        patch("src.handler.upload_json") as mock_upload,
     ):
         result = lambda_handler({}, None)
+
+    mock_upload.assert_called_once()
+    assert mock_upload.call_args.args[1] == "meta/last_run.json"
 
     assert result == {
         "dota2": {"fetched": 1},
@@ -339,6 +343,7 @@ def test_lambda_handler_isolates_one_source_failure():
             "src.handler.ingest_lol_champions_data",
             return_value={"champions_uploaded": True},
         ) as mock_champs,
+        patch("src.handler.upload_json") as mock_upload,
     ):
         result = lambda_handler({}, None)
 
@@ -346,4 +351,5 @@ def test_lambda_handler_isolates_one_source_failure():
     assert result["dota_heroes"] == {"heroes_uploaded": True}
     assert result["league_of_legends"] == {"players_processed": 1}
     assert result["lol_champions"] == {"champions_uploaded": True}
+    mock_upload.assert_called_once()
     mock_champs.assert_called_once()
