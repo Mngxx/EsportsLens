@@ -9,6 +9,7 @@ ATHENA_DATABASE = os.getenv("ATHENA_DATABASE")
 ATHENA_WORKGROUP = os.getenv("ATHENA_WORKGROUP")
 ATHENA_OUTPUT_LOCATION = os.getenv("ATHENA_OUTPUT_LOCATION")
 AWS_REGION = os.getenv("AWS_REGION")
+RAW_BUCKET_NAME = os.getenv("RAW_BUCKET_NAME")
 
 # Comma-separated list — a new local port only needs an api/.env edit now,
 # no source change + redeploy. Prod's *.vercel.app origins stay in main.py's
