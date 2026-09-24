@@ -4,6 +4,7 @@ import { PythonFunction } from "@aws-cdk/aws-lambda-python-alpha";
 import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as logs from "aws-cdk-lib/aws-logs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cdk from "aws-cdk-lib/core";
 import type { Construct } from "constructs";
@@ -27,6 +28,13 @@ export class IngestionStack extends cdk.Stack {
 			);
 		}
 
+		// Without an explicit LogGroup, Lambda auto-creates one with
+		// indefinite retention — set a bound explicitly instead.
+		const ingestionLogGroup = new logs.LogGroup(this, "ingestionLogGroup", {
+			retention: logs.RetentionDays.ONE_MONTH,
+			removalPolicy: cdk.RemovalPolicy.DESTROY,
+		});
+
 		const ingestionFunction = new PythonFunction(this, "ingestionFunction", {
 			entry: path.join(__dirname, "../../ingestion/src"),
 			runtime: lambda.Runtime.PYTHON_3_12,
@@ -38,6 +46,7 @@ export class IngestionStack extends cdk.Stack {
 				RAW_BUCKET_NAME: props.rawBucket.bucketName,
 				RIOT_API_KEY: process.env.RIOT_API_KEY ?? "",
 			},
+			logGroup: ingestionLogGroup,
 		});
 
 		props.rawBucket.grantWrite(ingestionFunction);

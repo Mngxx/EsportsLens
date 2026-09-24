@@ -1,5 +1,6 @@
 import { PythonFunction } from "@aws-cdk/aws-lambda-python-alpha";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as logs from "aws-cdk-lib/aws-logs";
 import * as cdk from "aws-cdk-lib/core";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { HttpApi, HttpMethod } from "aws-cdk-lib/aws-apigatewayv2";
@@ -16,6 +17,13 @@ export interface ApiStackProps extends cdk.StackProps {
 export class ApiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
+    // Without an explicit LogGroup, Lambda auto-creates one with
+    // indefinite retention — set a bound explicitly instead.
+    const apiLogGroup = new logs.LogGroup(this, "apiLogGroup", {
+      retention: logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     const apiFunction = new PythonFunction(this, "apiFunction", {
       entry: path.join(__dirname, "../../api/src"),
       runtime: lambda.Runtime.PYTHON_3_12,
@@ -28,6 +36,7 @@ export class ApiStack extends cdk.Stack {
         ATHENA_WORKGROUP: "esportslens-workgroup",
         ATHENA_OUTPUT_LOCATION: `s3://${props.athenaResultsBucket.bucketName}/`,
       },
+      logGroup: apiLogGroup,
     });
 
     props.athenaResultsBucket.grantReadWrite(apiFunction);
