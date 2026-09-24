@@ -7,8 +7,10 @@ from models.schemas import HealthSchema
 from routes import players, matches, meta, dashboard
 from mangum import Mangum
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 
 app = FastAPI()
+app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ALLOW_ORIGINS,
