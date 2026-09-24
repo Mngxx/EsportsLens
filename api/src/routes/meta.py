@@ -4,6 +4,7 @@ from models.schemas import (
     LoLChampionSchema,
     LoLChampionStatsSchema,
 )
+from cache import ttl_cache
 from fastapi import APIRouter
 from db.athena import run_query
 
@@ -11,6 +12,7 @@ router = APIRouter(prefix="/meta", tags=["meta"])
 
 
 @router.get("/dota2/heroes", response_model=list[Dota2HeroSchema])
+@ttl_cache(seconds=300)
 def get_dota2_heroes() -> list[Dota2HeroSchema]:
     sql = "SELECT * FROM dota2_heroes ORDER BY name ASC"
     dota2_heroes = run_query(sql)
@@ -18,6 +20,7 @@ def get_dota2_heroes() -> list[Dota2HeroSchema]:
 
 
 @router.get("/dota2/heroes/stats", response_model=list[Dota2HeroStatsSchema])
+@ttl_cache(seconds=300)
 def get_dota2_heroes_stats() -> list[Dota2HeroStatsSchema]:
     sql = "SELECT * FROM dota2_hero_stats ORDER BY hero_name ASC"
     dota2_heroes_stats = run_query(sql)
@@ -25,6 +28,7 @@ def get_dota2_heroes_stats() -> list[Dota2HeroStatsSchema]:
 
 
 @router.get("/lol/champions", response_model=list[LoLChampionSchema])
+@ttl_cache(seconds=300)
 def get_lol_champions() -> list[LoLChampionSchema]:
     sql = "SELECT * FROM league_of_legends_champions ORDER BY name ASC"
     lol_champions = run_query(sql)
@@ -32,6 +36,7 @@ def get_lol_champions() -> list[LoLChampionSchema]:
 
 
 @router.get("/lol/champions/stats", response_model=list[LoLChampionStatsSchema])
+@ttl_cache(seconds=300)
 def get_lol_champions_stats() -> list[LoLChampionStatsSchema]:
     sql = "SELECT * FROM league_of_legends_champion_stats ORDER BY champion_name ASC"
     lol_champions_stats = run_query(sql)

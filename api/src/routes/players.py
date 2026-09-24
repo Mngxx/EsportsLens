@@ -4,6 +4,7 @@ from models.schemas import (
     Dota2PlayerSearchSchema,
     LoLPlayerSearchSchema,
 )
+from cache import ttl_cache
 from db.athena import run_query
 from fastapi import APIRouter, Query, Path
 
@@ -11,6 +12,7 @@ router = APIRouter(prefix="/players", tags=["players"])
 
 
 @router.get("/dota2/{account_id}/matches", response_model=list[Dota2MatchSchema])
+@ttl_cache(seconds=300)
 def get_dota2_players(
     account_id: int, limit: int = Query(default=10, le=50)
 ) -> list[Dota2MatchSchema]:
@@ -20,6 +22,7 @@ def get_dota2_players(
 
 
 @router.get("/lol/{puuid}/matches", response_model=list[LoLMatchSchema])
+@ttl_cache(seconds=300)
 def get_lol_players(
     puuid: str = Path(pattern=r"^[A-Za-z0-9_-]+$"),
     limit: int = Query(default=10, le=50),
@@ -30,6 +33,7 @@ def get_lol_players(
 
 
 @router.get("/dota2/search", response_model=list[Dota2PlayerSearchSchema])
+@ttl_cache(seconds=300)
 def search_dota2_players(
     name: str = Query(min_length=3, max_length=50),
     limit: int = Query(default=10, le=50),
@@ -41,6 +45,7 @@ def search_dota2_players(
 
 
 @router.get("/lol/search", response_model=list[LoLPlayerSearchSchema])
+@ttl_cache(seconds=300)
 def search_lol_players(
     name: str = Query(min_length=3, max_length=50),
     limit: int = Query(default=10, le=50),

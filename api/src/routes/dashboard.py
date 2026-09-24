@@ -1,4 +1,5 @@
 from models.schemas import Dota2DashboardSummarySchema, LoLDashboardSummarySchema
+from cache import ttl_cache
 from fastapi import APIRouter
 from db.athena import run_query
 
@@ -6,6 +7,7 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
 @router.get("/dota2/summary", response_model=Dota2DashboardSummarySchema)
+@ttl_cache(seconds=300)
 def get_dota2_dashboard_summary() -> Dota2DashboardSummarySchema:
     matches_today = run_query(
         "SELECT COUNT(DISTINCT match_id) AS matches_today FROM dota2_matches WHERE date(match_date) = current_date"
@@ -28,6 +30,7 @@ def get_dota2_dashboard_summary() -> Dota2DashboardSummarySchema:
 
 
 @router.get("/lol/summary", response_model=LoLDashboardSummarySchema)
+@ttl_cache(seconds=300)
 def get_lol_dashboard_summary() -> LoLDashboardSummarySchema:
     matches_today = run_query(
         "SELECT COUNT(DISTINCT match_id) AS matches_today FROM league_of_legends_matches WHERE date(match_date) = current_date"
