@@ -1,6 +1,7 @@
 import * as path from "node:path";
 
 import { PythonFunction } from "@aws-cdk/aws-lambda-python-alpha";
+import * as cloudwatch from "aws-cdk-lib/aws-cloudwatch";
 import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -55,5 +56,17 @@ export class IngestionStack extends cdk.Stack {
 			schedule: events.Schedule.rate(cdk.Duration.hours(6)),
 		});
 		schedule.addTarget(new targets.LambdaFunction(ingestionFunction));
+
+		// No SNS action — just a visible ALARM state in the console for now.
+		new cloudwatch.Alarm(this, "ingestionErrorsAlarm", {
+			metric: ingestionFunction.metricErrors({
+				period: cdk.Duration.hours(6),
+			}),
+			threshold: 1,
+			evaluationPeriods: 1,
+			comparisonOperator:
+				cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+			treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+		});
 	}
 }

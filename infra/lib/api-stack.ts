@@ -1,4 +1,5 @@
 import { PythonFunction } from "@aws-cdk/aws-lambda-python-alpha";
+import * as cloudwatch from "aws-cdk-lib/aws-cloudwatch";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as cdk from "aws-cdk-lib/core";
@@ -82,6 +83,18 @@ export class ApiStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "HttpApiEndpoint", {
       value: httpApi.apiEndpoint,
+    });
+
+    // No SNS action — just a visible ALARM state in the console for now.
+    new cloudwatch.Alarm(this, "apiErrorsAlarm", {
+      metric: apiFunction.metricErrors({
+        period: cdk.Duration.minutes(5),
+      }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      comparisonOperator:
+        cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
   }
 }
