@@ -11,90 +11,95 @@ import * as path from "node:path";
 import type { Construct } from "constructs";
 
 export interface ApiStackProps extends cdk.StackProps {
-  athenaResultsBucket: s3.Bucket;
-  curatedBucket: s3.Bucket;
+    athenaResultsBucket: s3.Bucket;
+    curatedBucket: s3.Bucket;
+    rawBucket: s3.Bucket;
 }
 
 export class ApiStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: ApiStackProps) {
-    super(scope, id, props);
-    // Without an explicit LogGroup, Lambda auto-creates one with
-    // indefinite retention — set a bound explicitly instead.
-    const apiLogGroup = new logs.LogGroup(this, "apiLogGroup", {
-      retention: logs.RetentionDays.ONE_MONTH,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+    constructor(scope: Construct, id: string, props: ApiStackProps) {
+        super(scope, id, props);
+        // Without an explicit LogGroup, Lambda auto-creates one with
+        // indefinite retention — set a bound explicitly instead.
+        const apiLogGroup = new logs.LogGroup(this, "apiLogGroup", {
+            retention: logs.RetentionDays.ONE_MONTH,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+        });
 
-    const apiFunction = new PythonFunction(this, "apiFunction", {
-      entry: path.join(__dirname, "../../api/src"),
-      runtime: lambda.Runtime.PYTHON_3_12,
-      index: "main.py",
-      handler: "handler",
-      timeout: cdk.Duration.seconds(29),
-      memorySize: 512,
-      environment: {
-        ATHENA_DATABASE: "esportslens_db",
-        ATHENA_WORKGROUP: "esportslens-workgroup",
-        ATHENA_OUTPUT_LOCATION: `s3://${props.athenaResultsBucket.bucketName}/`,
-      },
-      logGroup: apiLogGroup,
-    });
+        const apiFunction = new PythonFunction(this, "apiFunction", {
+            entry: path.join(__dirname, "../../api/src"),
+            runtime: lambda.Runtime.PYTHON_3_12,
+            index: "main.py",
+            handler: "handler",
+            timeout: cdk.Duration.seconds(29),
+            memorySize: 512,
+            environment: {
+                ATHENA_DATABASE: "esportslens_db",
+                ATHENA_WORKGROUP: "esportslens-workgroup",
+                ATHENA_OUTPUT_LOCATION: `s3://${props.athenaResultsBucket.bucketName}/`,
+                RAW_BUCKET_NAME: props.rawBucket.bucketName,
+            },
+            logGroup: apiLogGroup,
+        });
 
-    props.athenaResultsBucket.grantReadWrite(apiFunction);
-    props.curatedBucket.grantRead(apiFunction);
+        props.athenaResultsBucket.grantReadWrite(apiFunction);
+        props.curatedBucket.grantRead(apiFunction);
 
-    const athenaPolicy = new iam.PolicyStatement({
-      actions: [
-        "athena:StartQueryExecution",
-        "athena:GetQueryExecution",
-        "athena:GetQueryResults",
-        "athena:GetWorkGroup",
-      ],
-      resources: [
-        `arn:aws:athena:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:workgroup/esportslens-workgroup`,
-      ],
-    });
-    const gluePolicy = new iam.PolicyStatement({
-      actions: [
-        "glue:GetTable",
-        "glue:GetTables",
-        "glue:GetDatabase",
-        "glue:GetPartitions",
-      ],
-      resources: [
-        `arn:aws:glue:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:table/esportslens_db/*`,
-        `arn:aws:glue:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:catalog`,
-        `arn:aws:glue:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:database/esportslens_db`,
-      ],
-    });
+        props.rawBucket.grantRead(apiFunction, "meta/last_run.json");
 
-    apiFunction.addToRolePolicy(gluePolicy);
-    apiFunction.addToRolePolicy(athenaPolicy);
+        const athenaPolicy = new iam.PolicyStatement({
+            actions: [
+                "athena:StartQueryExecution",
+                "athena:GetQueryExecution",
+                "athena:GetQueryResults",
+                "athena:GetWorkGroup",
+            ],
+            resources: [
+                `arn:aws:athena:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:workgroup/esportslens-workgroup`,
+            ],
+        });
+        const gluePolicy = new iam.PolicyStatement({
+            actions: [
+                "glue:GetTable",
+                "glue:GetTables",
+                "glue:GetDatabase",
+                "glue:GetPartitions",
+            ],
+            resources: [
+                `arn:aws:glue:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:table/esportslens_db/*`,
+                `arn:aws:glue:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:catalog`,
+                `arn:aws:glue:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:database/esportslens_db`,
+            ],
+        });
 
-    const apiIntegration = new HttpLambdaIntegration(
-      "apiIntegration",
-      apiFunction,
-    );
+        apiFunction.addToRolePolicy(gluePolicy);
+        apiFunction.addToRolePolicy(athenaPolicy);
 
-    const httpApi = new HttpApi(this, "HttpApi", {
-      apiName: "esportslens-api",
-      defaultIntegration: apiIntegration,
-    });
+        const apiIntegration = new HttpLambdaIntegration(
+            "apiIntegration",
+            apiFunction,
+        );
 
-    new cdk.CfnOutput(this, "HttpApiEndpoint", {
-      value: httpApi.apiEndpoint,
-    });
+        const httpApi = new HttpApi(this, "HttpApi", {
+            apiName: "esportslens-api",
+            defaultIntegration: apiIntegration,
+        });
 
-    // No SNS action — just a visible ALARM state in the console for now.
-    new cloudwatch.Alarm(this, "apiErrorsAlarm", {
-      metric: apiFunction.metricErrors({
-        period: cdk.Duration.minutes(5),
-      }),
-      threshold: 1,
-      evaluationPeriods: 1,
-      comparisonOperator:
-        cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    });
-  }
+        new cdk.CfnOutput(this, "HttpApiEndpoint", {
+            value: httpApi.apiEndpoint,
+        });
+
+        // No SNS action — just a visible ALARM state in the console for now.
+        new cloudwatch.Alarm(this, "apiErrorsAlarm", {
+            metric: apiFunction.metricErrors({
+                period: cdk.Duration.minutes(5),
+            }),
+            threshold: 1,
+            evaluationPeriods: 1,
+            comparisonOperator:
+                cloudwatch.ComparisonOperator
+                    .GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+            treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        });
+    }
 }
