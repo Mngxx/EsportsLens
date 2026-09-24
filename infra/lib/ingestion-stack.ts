@@ -16,9 +16,14 @@ export class IngestionStack extends cdk.Stack {
 	constructor(scope: Construct, id: string, props: IngestionStackProps) {
 		super(scope, id, props);
 
+		// CDK synthesizes every stack regardless of deploy target, so a hard
+		// throw here used to break unrelated stacks too — warn instead.
 		if (!process.env.RIOT_API_KEY) {
-			throw new Error(
-				"RIOT_API_KEY is not set — check ingestion/.env before deploying.",
+			console.warn(
+				"WARNING: RIOT_API_KEY is not set (check ingestion/.env) — " +
+					"IngestionStack will synthesize with an empty key. The " +
+					"ingestion Lambda will fail at runtime until this is set " +
+					"and the stack is redeployed.",
 			);
 		}
 
@@ -31,7 +36,7 @@ export class IngestionStack extends cdk.Stack {
 			memorySize: 512,
 			environment: {
 				RAW_BUCKET_NAME: props.rawBucket.bucketName,
-				RIOT_API_KEY: process.env.RIOT_API_KEY,
+				RIOT_API_KEY: process.env.RIOT_API_KEY ?? "",
 			},
 		});
 
