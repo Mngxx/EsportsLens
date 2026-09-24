@@ -181,4 +181,13 @@ def lambda_handler(event, context) -> dict:
 
     logger.info(f"Ingestion run complete: {results}")
 
+    upload_json(
+        bucket,
+        "meta/last_run.json",
+        {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "results": results,
+        },
+    )
+
     return results
