@@ -173,6 +173,11 @@ export interface LoLDashboardSummary {
     most_picked_champion: LoLMostPicked | null;
 }
 
+export interface HealthResponse {
+    status: string;
+    last_run: string | null; // ISO 8601, or null if ingestion hasn't run yet
+}
+
 export interface MatchRow {
     matchId: string;
     game: Game;
