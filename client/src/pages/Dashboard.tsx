@@ -2,6 +2,7 @@ import PipelineStatus from "../components/PipelineStatus";
 import Skeleton from "../components/Skeleton";
 import {
     useDota2DashboardSummary,
+    useHealth,
     useLoLDashboardSummary,
 } from "../hooks/useDashboard";
 import { useMetaHeroes } from "../hooks/useMeta";
@@ -33,6 +34,7 @@ function DashboardSummarySkeleton() {
 function Dashboard() {
     const dota2 = useDota2DashboardSummary();
     const lol = useLoLDashboardSummary();
+    const health = useHealth();
     const dota2Heroes = useMetaHeroes("dota2");
 
     let dota2HeroLookup: Record<number, string> | undefined;
@@ -50,9 +52,7 @@ function Dashboard() {
                 <h1 className="text-2xl font-semibold text-zinc-100">
                     Dashboard
                 </h1>
-                {/* lastRun stays null until Week 5 Day 4 wires up a real
-                    last-ingestion timestamp (see Section 15, Technical Debt) */}
-                <PipelineStatus lastRun={null} />
+                <PipelineStatus lastRun={health.data?.last_run ?? null} />
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
