@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import GameSelector from "../components/GameSelector";
-import PickWinScatter from "../components/PickWinScatter";
 import HeroChampionGrid from "../components/HeroChampionGrid";
 import Skeleton from "../components/Skeleton";
 import { useMetaHeroStats } from "../hooks/useMeta";
 import { toHeroChampionStat } from "../lib/derive";
 import type { Game, HeroChampionStat } from "../types";
+
+const PickWinScatter = lazy(() => import("../components/PickWinScatter"));
 
 function Meta() {
     const [game, setGame] = useState<Game>("dota2");
@@ -52,7 +53,9 @@ function Meta() {
                     <h2 className="mb-3 text-sm font-medium text-zinc-400">
                         Pick Rate vs Win Rate
                     </h2>
-                    <PickWinScatter stats={stats} />
+                    <Suspense fallback={<Skeleton className="h-80 w-full" />}>
+                        <PickWinScatter stats={stats} />
+                    </Suspense>
                 </section>
             )}
 

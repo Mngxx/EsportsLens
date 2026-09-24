@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import GameSelector from "../components/GameSelector";
 import SearchBar from "../components/SearchBar";
 import PlayerCard from "../components/PlayerCard";
 import MatchTable from "../components/MatchTable";
-import KDATrendLine from "../components/KDATrendLine";
 import Skeleton from "../components/Skeleton";
 import { usePlayerSearch } from "../hooks/usePlayers";
 import { usePlayerMatches } from "../hooks/useMatches";
@@ -21,6 +20,8 @@ interface SelectedPlayer {
     name: string;
 }
 
+const KDATrendLine = lazy(() => import("../components/KDATrendLine"));
+
 function Players() {
     const [game, setGame] = useState<Game>("dota2");
     const [query, setQuery] = useState("");
@@ -28,9 +29,6 @@ function Players() {
         null,
     );
 
-    // Switching games invalidates both the current search results and
-    // whichever player was selected under the old game — a Dota2 account_id
-    // means nothing as a LoL puuid, and vice versa.
     function handleGameChange(nextGame: Game) {
         setGame(nextGame);
         setQuery("");
@@ -46,9 +44,6 @@ function Players() {
         selectedPlayer !== null,
     );
 
-    // LoL doesn't need this — LoLMatch already has champion_name built in.
-    // heroes.data's type covers both games, so cast it to Dota2Hero[] once
-    // we know (via the `if`) that we're actually looking at Dota2 heroes.
     let dota2HeroLookup: Record<number, string> | undefined;
     if (game === "dota2" && heroes.data) {
         const dota2Heroes = heroes.data as Dota2Hero[];
@@ -169,7 +164,11 @@ function Players() {
 
                     {(matches.loading || matchRows.length > 0) && (
                         <>
-                            <KDATrendLine matches={matchRows} />
+                            <Suspense
+                                fallback={<Skeleton className="h-60 w-full" />}
+                            >
+                                <KDATrendLine matches={matchRows} />
+                            </Suspense>
                             <MatchTable
                                 matches={matchRows}
                                 loading={matches.loading}
