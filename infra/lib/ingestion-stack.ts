@@ -53,14 +53,14 @@ export class IngestionStack extends cdk.Stack {
 		props.rawBucket.grantWrite(ingestionFunction);
 
 		const schedule = new events.Rule(this, "ingestionSchedule", {
-			schedule: events.Schedule.rate(cdk.Duration.hours(6)),
+			schedule: events.Schedule.rate(cdk.Duration.hours(12)),
 		});
 		schedule.addTarget(new targets.LambdaFunction(ingestionFunction));
 
 		// No SNS action — just a visible ALARM state in the console for now.
 		new cloudwatch.Alarm(this, "ingestionErrorsAlarm", {
 			metric: ingestionFunction.metricErrors({
-				period: cdk.Duration.hours(6),
+				period: cdk.Duration.hours(12),
 			}),
 			threshold: 1,
 			evaluationPeriods: 1,
