@@ -18,8 +18,8 @@ Built as a hands-on portfolio project to learn AWS data engineering end-to-end �
 
 ## How It Works
 
-1. An AWS Lambda function fetches pro match data (Dota 2, via OpenDota) and Challenger ladder match data (League of Legends, via Riot's API) on a 6-hour EventBridge schedule
-2. Raw JSON lands in an S3 data lake, partitioned by game / year / month / day
+1. An AWS Lambda function fetches pro match data (Dota 2, via OpenDota) and Challenger ladder match data (League of Legends, via Riot's API) on a 12-hour EventBridge schedule
+2. Raw JSON lands in an S3 data lake (reference data like heroes/champions partitioned by date; match data keyed by match ID so re-ingesting an already-seen match overwrites rather than duplicates — see the curated ETL dedup step below for why that matters)
 3. AWS Glue (PySpark) transforms the raw JSON into cleaned, typed, partitioned Parquet
 4. AWS Athena runs SQL directly over the curated Parquet data — no database to manage
 5. A FastAPI backend (deployed on Lambda) queries Athena and serves results as JSON over REST
@@ -31,7 +31,7 @@ Built as a hands-on portfolio project to learn AWS data engineering end-to-end �
 
 | Layer | Technology | Notes |
 |---|---|---|
-| Ingestion | AWS Lambda (Python 3.12) | Triggered by EventBridge every 6 hours |
+| Ingestion | AWS Lambda (Python 3.12) | Triggered by EventBridge every 12 hours |
 | Data Lake | Amazon S3 | Raw (JSON) + curated (Parquet) buckets, private, SSE-encrypted |
 | ETL | AWS Glue (PySpark) | Raw JSON → typed, partitioned Parquet |
 | Query Engine | AWS Athena | Serverless SQL over S3, partition projection for cost control |
@@ -134,7 +134,7 @@ npm run format:check  # Prettier — npm run format to auto-fix
 - [x] AWS CDK project scaffolded
 - [x] S3 data lake deployed (raw + curated buckets, encrypted, private)
 - [x] Ingestion Lambda (Dota 2 + League of Legends fetchers, full test coverage)
-- [x] EventBridge cron schedule (every 6 hours) — deployed and verified writing real data to S3
+- [x] EventBridge cron schedule (every 12 hours, reduced from 6 in Week 5 to cut S3 storage costs) — deployed and verified writing real data to S3
 
 ### Week 2 — ETL & Athena ✅ Complete
 - [x] Glue PySpark transform jobs (raw JSON → curated Parquet) — two jobs covering all six curated tables across both games
@@ -158,6 +158,7 @@ npm run format:check  # Prettier — npm run format to auto-fix
 - [x] Frontend polish — loading skeletons, error boundaries, responsive layout, sortable match table, Prettier enforced in CI
 - [x] CloudWatch log groups + error-rate alarms on both Lambdas; dashboard now shows a live last-ingestion-run indicator (previously a placeholder)
 - [x] Performance — server-side response caching + gzip compression on the API, chart components code-split out of the main JS bundle; Lighthouse performance scores 95–99 across all 4 pages
+- [x] S3 cost cleanup — ingestion schedule reduced 6h → 12h, S3 lifecycle rules added (neither raw nor curated bucket had ever had one), and raw match objects made idempotent per match ID so re-ingesting an already-seen match overwrites instead of piling up duplicates
 
 ### Week 6 — Documentation & Portfolio Integration
 - [ ] Architecture diagram and demo walkthrough
