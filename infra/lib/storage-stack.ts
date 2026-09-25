@@ -22,6 +22,33 @@ export class StorageStack extends cdk.Stack {
 			autoDeleteObjects: true,
 			versioned: true,
 			...bucketSecurityConfig,
+			lifecycleRules: [
+				{
+					// Both buckets are versioned with no prior lifecycle policy —
+					// every overwritten object (heroes/champions snapshots, the
+					// last_run.json marker) has been keeping every old version
+					// forever since Week 1. This alone was a silent, unbounded
+					// cost driver independent of the raw-match-duplication issue.
+					id: "expire-noncurrent-versions",
+					noncurrentVersionExpiration: cdk.Duration.days(14),
+				},
+				{
+					// Raw match JSON is ETL staging only — once curated tables
+					// have ingested it (dropDuplicates handles re-ingested
+					// matches there), the raw copy serves no purpose except
+					// reprocessing/audit. Reference data (heroes/champions/
+					// hero_stats/champion_stats) and meta/last_run.json are
+					// NOT under these prefixes, so they're unaffected.
+					id: "expire-old-raw-matches",
+					prefix: "dota2/matches/",
+					expiration: cdk.Duration.days(60),
+				},
+				{
+					id: "expire-old-raw-lol-matches",
+					prefix: "league_of_legends/matches/",
+					expiration: cdk.Duration.days(60),
+				},
+			],
 		});
 
 		// Create the second bucket
@@ -31,6 +58,16 @@ export class StorageStack extends cdk.Stack {
 			autoDeleteObjects: true,
 			versioned: true,
 			...bucketSecurityConfig,
+			lifecycleRules: [
+				{
+					// No object-expiration rule here — curated is what Athena
+					// actually serves, unlike raw. Only the versioning bloat
+					// (old overwritten Parquet versions from every ETL run)
+					// gets cleaned up.
+					id: "expire-noncurrent-versions",
+					noncurrentVersionExpiration: cdk.Duration.days(14),
+				},
+			],
 		});
 	}
 }
