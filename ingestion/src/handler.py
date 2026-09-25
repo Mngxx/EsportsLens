@@ -42,10 +42,7 @@ def build_object_key(
 
 
 def build_match_object_key(game: str, match_id: str) -> str:
-    # No timestamp/date — a still-top-10 (Dota2) or still-in-last-3 (LoL)
-    # match gets re-ingested every run; keying on match_id alone makes that
-    # an overwrite instead of a new S3 object, so raw storage doesn't grow
-    # unboundedly from re-ingesting the same match over and over.
+    # No timestamp — re-ingesting a match overwrites instead of duplicating.
     return f"{game}/matches/matches_{match_id}.json"
 
 
