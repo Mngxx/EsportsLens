@@ -116,6 +116,9 @@ def transform_matches(df: DataFrame) -> DataFrame:
         "is_radiant", when(col("is_radiant"), "radiant").otherwise("dire")
     ).withColumnRenamed("is_radiant", "team")
     matches_df = matches_df.withColumn("win", (col("win") == 1))
+    # A still-top-10 pro match gets re-ingested as a new raw snapshot every
+    # run — dedupe so re-ingestion doesn't duplicate its player rows.
+    matches_df = matches_df.dropDuplicates(["match_id", "account_id"])
     return matches_df
 
 

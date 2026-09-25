@@ -1,3 +1,16 @@
+import pytest
+from cache import clear_all
+
+
+@pytest.fixture(autouse=True)
+def _clear_route_caches():
+    """Routes are wrapped in @ttl_cache — without this, one test's mocked
+    run_query result would leak into a later test hitting the same route
+    with the same params but a different mock."""
+    clear_all()
+    yield
+
+
 def make_dota2_match_row(**overrides):
     row = {
         "match_id": "123",

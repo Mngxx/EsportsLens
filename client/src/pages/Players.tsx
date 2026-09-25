@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import GameSelector from "../components/GameSelector";
 import SearchBar from "../components/SearchBar";
 import PlayerCard from "../components/PlayerCard";
 import MatchTable from "../components/MatchTable";
-import KDATrendLine from "../components/KDATrendLine";
+import Skeleton from "../components/Skeleton";
 import { usePlayerSearch } from "../hooks/usePlayers";
 import { usePlayerMatches } from "../hooks/useMatches";
 import { useMetaHeroes } from "../hooks/useMeta";
@@ -20,6 +20,8 @@ interface SelectedPlayer {
     name: string;
 }
 
+const KDATrendLine = lazy(() => import("../components/KDATrendLine"));
+
 function Players() {
     const [game, setGame] = useState<Game>("dota2");
     const [query, setQuery] = useState("");
@@ -27,9 +29,6 @@ function Players() {
         null,
     );
 
-    // Switching games invalidates both the current search results and
-    // whichever player was selected under the old game — a Dota2 account_id
-    // means nothing as a LoL puuid, and vice versa.
     function handleGameChange(nextGame: Game) {
         setGame(nextGame);
         setQuery("");
@@ -45,9 +44,6 @@ function Players() {
         selectedPlayer !== null,
     );
 
-    // LoL doesn't need this — LoLMatch already has champion_name built in.
-    // heroes.data's type covers both games, so cast it to Dota2Hero[] once
-    // we know (via the `if`) that we're actually looking at Dota2 heroes.
     let dota2HeroLookup: Record<number, string> | undefined;
     if (game === "dota2" && heroes.data) {
         const dota2Heroes = heroes.data as Dota2Hero[];
@@ -57,7 +53,6 @@ function Players() {
         );
     }
 
-
     const matchRows =
         matches.data?.map((m) => toMatchRow(m, game, dota2HeroLookup)) ?? [];
     const stats = matches.data ? derivePlayerStats(matches.data, game) : null;
@@ -66,9 +61,14 @@ function Players() {
         setSelectedPlayer({ id, name });
     }
 
+    function handleSearch(newQuery: string) {
+        setQuery(newQuery);
+        setSelectedPlayer(null);
+    }
+
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h1 className="text-2xl font-semibold text-zinc-100">
                     Players
                 </h1>
@@ -76,7 +76,7 @@ function Players() {
             </div>
 
             <SearchBar
-                onSearch={setQuery}
+                onSearch={handleSearch}
                 placeholder={
                     game === "dota2"
                         ? "Search Dota 2 players…"
@@ -86,9 +86,10 @@ function Players() {
 
             {query && !selectedPlayer && (
                 <div className="space-y-1">
-                    {search.loading && (
-                        <p className="text-sm text-zinc-500">Searching…</p>
-                    )}
+                    {search.loading &&
+                        Array.from({ length: 5 }).map((_, i) => (
+                            <Skeleton key={i} className="h-9 w-full" />
+                        ))}
                     {search.error && (
                         <p className="text-sm text-rose-400">
                             {search.error.message}
@@ -135,7 +136,17 @@ function Players() {
                     </button>
 
                     {matches.loading && (
-                        <p className="text-sm text-zinc-500">Loading player…</p>
+                        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+                            <div className="flex items-center justify-between">
+                                <Skeleton className="h-6 w-32" />
+                                <Skeleton className="h-3 w-16" />
+                            </div>
+                            <div className="mt-4 grid grid-cols-3 gap-4">
+                                {Array.from({ length: 3 }).map((_, i) => (
+                                    <Skeleton key={i} className="h-8 w-full" />
+                                ))}
+                            </div>
+                        </div>
                     )}
                     {matches.error && (
                         <p className="text-sm text-rose-400">
@@ -151,9 +162,13 @@ function Players() {
                         />
                     )}
 
-                    {matchRows.length > 0 && (
+                    {(matches.loading || matchRows.length > 0) && (
                         <>
-                            <KDATrendLine matches={matchRows} />
+                            <Suspense
+                                fallback={<Skeleton className="h-60 w-full" />}
+                            >
+                                <KDATrendLine matches={matchRows} />
+                            </Suspense>
                             <MatchTable
                                 matches={matchRows}
                                 loading={matches.loading}

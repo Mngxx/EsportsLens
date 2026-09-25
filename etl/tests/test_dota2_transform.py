@@ -74,3 +74,14 @@ def test_transform_hero_stats_flattens_to_one_row_per_hero(spark):
     assert lina.win_rate == pytest.approx(395419 / 799651)
     assert lina.ban_rate == pytest.approx(62 / 91)
     assert lina.pick_rate == pytest.approx(799651 / ((548994 + 799651) / 10))
+
+
+def test_transform_matches_dedupes_a_match_reingested_multiple_times(spark, tmp_path):
+    sample = (FIXTURES_DIR / "dota2_match_sample.json").read_text()
+    (tmp_path / "snapshot_1.json").write_text(sample)
+    (tmp_path / "snapshot_2.json").write_text(sample)
+
+    df = read_s3_json(str(tmp_path))
+    result = transform_matches(df).collect()
+
+    assert len(result) == 2

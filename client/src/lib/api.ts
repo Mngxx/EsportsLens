@@ -6,6 +6,7 @@ import type {
     Dota2Match,
     Dota2MatchSummary,
     Dota2PlayerSearchResult,
+    HealthResponse,
     LoLChampion,
     LoLChampionStats,
     LoLDashboardSummary,
@@ -134,4 +135,8 @@ export function getDota2DashboardSummary(): Promise<Dota2DashboardSummary> {
 
 export function getLoLDashboardSummary(): Promise<LoLDashboardSummary> {
     return apiFetch<LoLDashboardSummary>("/dashboard/lol/summary");
+}
+
+export function getHealth(): Promise<HealthResponse> {
+    return apiFetch<HealthResponse>("/health");
 }

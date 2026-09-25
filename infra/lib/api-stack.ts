@@ -1,5 +1,7 @@
 import { PythonFunction } from "@aws-cdk/aws-lambda-python-alpha";
+import * as cloudwatch from "aws-cdk-lib/aws-cloudwatch";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as logs from "aws-cdk-lib/aws-logs";
 import * as cdk from "aws-cdk-lib/core";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { HttpApi, HttpMethod } from "aws-cdk-lib/aws-apigatewayv2";
@@ -9,70 +11,95 @@ import * as path from "node:path";
 import type { Construct } from "constructs";
 
 export interface ApiStackProps extends cdk.StackProps {
-  athenaResultsBucket: s3.Bucket;
-  curatedBucket: s3.Bucket;
+    athenaResultsBucket: s3.Bucket;
+    curatedBucket: s3.Bucket;
+    rawBucket: s3.Bucket;
 }
 
 export class ApiStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: ApiStackProps) {
-    super(scope, id, props);
-    const apiFunction = new PythonFunction(this, "apiFunction", {
-      entry: path.join(__dirname, "../../api/src"),
-      runtime: lambda.Runtime.PYTHON_3_12,
-      index: "main.py",
-      handler: "handler",
-      timeout: cdk.Duration.seconds(29),
-      memorySize: 512,
-      environment: {
-        ATHENA_DATABASE: "esportslens_db",
-        ATHENA_WORKGROUP: "esportslens-workgroup",
-        ATHENA_OUTPUT_LOCATION: `s3://${props.athenaResultsBucket.bucketName}/`,
-      },
-    });
+    constructor(scope: Construct, id: string, props: ApiStackProps) {
+        super(scope, id, props);
+        // Without an explicit LogGroup, Lambda auto-creates one with
+        // indefinite retention — set a bound explicitly instead.
+        const apiLogGroup = new logs.LogGroup(this, "apiLogGroup", {
+            retention: logs.RetentionDays.ONE_MONTH,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+        });
 
-    props.athenaResultsBucket.grantReadWrite(apiFunction);
-    props.curatedBucket.grantRead(apiFunction);
+        const apiFunction = new PythonFunction(this, "apiFunction", {
+            entry: path.join(__dirname, "../../api/src"),
+            runtime: lambda.Runtime.PYTHON_3_12,
+            index: "main.py",
+            handler: "handler",
+            timeout: cdk.Duration.seconds(29),
+            memorySize: 512,
+            environment: {
+                ATHENA_DATABASE: "esportslens_db",
+                ATHENA_WORKGROUP: "esportslens-workgroup",
+                ATHENA_OUTPUT_LOCATION: `s3://${props.athenaResultsBucket.bucketName}/`,
+                RAW_BUCKET_NAME: props.rawBucket.bucketName,
+            },
+            logGroup: apiLogGroup,
+        });
 
-    const athenaPolicy = new iam.PolicyStatement({
-      actions: [
-        "athena:StartQueryExecution",
-        "athena:GetQueryExecution",
-        "athena:GetQueryResults",
-        "athena:GetWorkGroup",
-      ],
-      resources: [
-        `arn:aws:athena:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:workgroup/esportslens-workgroup`,
-      ],
-    });
-    const gluePolicy = new iam.PolicyStatement({
-      actions: [
-        "glue:GetTable",
-        "glue:GetTables",
-        "glue:GetDatabase",
-        "glue:GetPartitions",
-      ],
-      resources: [
-        `arn:aws:glue:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:table/esportslens_db/*`,
-        `arn:aws:glue:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:catalog`,
-        `arn:aws:glue:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:database/esportslens_db`,
-      ],
-    });
+        props.athenaResultsBucket.grantReadWrite(apiFunction);
+        props.curatedBucket.grantRead(apiFunction);
 
-    apiFunction.addToRolePolicy(gluePolicy);
-    apiFunction.addToRolePolicy(athenaPolicy);
+        props.rawBucket.grantRead(apiFunction, "meta/last_run.json");
 
-    const apiIntegration = new HttpLambdaIntegration(
-      "apiIntegration",
-      apiFunction,
-    );
+        const athenaPolicy = new iam.PolicyStatement({
+            actions: [
+                "athena:StartQueryExecution",
+                "athena:GetQueryExecution",
+                "athena:GetQueryResults",
+                "athena:GetWorkGroup",
+            ],
+            resources: [
+                `arn:aws:athena:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:workgroup/esportslens-workgroup`,
+            ],
+        });
+        const gluePolicy = new iam.PolicyStatement({
+            actions: [
+                "glue:GetTable",
+                "glue:GetTables",
+                "glue:GetDatabase",
+                "glue:GetPartitions",
+            ],
+            resources: [
+                `arn:aws:glue:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:table/esportslens_db/*`,
+                `arn:aws:glue:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:catalog`,
+                `arn:aws:glue:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:database/esportslens_db`,
+            ],
+        });
 
-    const httpApi = new HttpApi(this, "HttpApi", {
-      apiName: "esportslens-api",
-      defaultIntegration: apiIntegration,
-    });
+        apiFunction.addToRolePolicy(gluePolicy);
+        apiFunction.addToRolePolicy(athenaPolicy);
 
-    new cdk.CfnOutput(this, "HttpApiEndpoint", {
-      value: httpApi.apiEndpoint,
-    });
-  }
+        const apiIntegration = new HttpLambdaIntegration(
+            "apiIntegration",
+            apiFunction,
+        );
+
+        const httpApi = new HttpApi(this, "HttpApi", {
+            apiName: "esportslens-api",
+            defaultIntegration: apiIntegration,
+        });
+
+        new cdk.CfnOutput(this, "HttpApiEndpoint", {
+            value: httpApi.apiEndpoint,
+        });
+
+        // No SNS action — just a visible ALARM state in the console for now.
+        new cloudwatch.Alarm(this, "apiErrorsAlarm", {
+            metric: apiFunction.metricErrors({
+                period: cdk.Duration.minutes(5),
+            }),
+            threshold: 1,
+            evaluationPeriods: 1,
+            comparisonOperator:
+                cloudwatch.ComparisonOperator
+                    .GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+            treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        });
+    }
 }

@@ -4,6 +4,7 @@ from models.schemas import (
     Dota2MatchSummarySchema,
     LoLMatchSummarySchema,
 )
+from cache import ttl_cache
 from fastapi import APIRouter, Path, Query
 from db.athena import run_query
 
@@ -11,6 +12,7 @@ router = APIRouter(prefix="/matches", tags=["matches"])
 
 
 @router.get("/dota2/recent", response_model=list[Dota2MatchSummarySchema])
+@ttl_cache(seconds=300)
 def get_recent_dota2_matches(
     limit: int = Query(default=10, le=50),
 ) -> list[Dota2MatchSummarySchema]:
@@ -20,6 +22,7 @@ def get_recent_dota2_matches(
 
 
 @router.get("/lol/recent", response_model=list[LoLMatchSummarySchema])
+@ttl_cache(seconds=300)
 def get_recent_lol_matches(
     limit: int = Query(default=10, le=50),
 ) -> list[LoLMatchSummarySchema]:
@@ -29,6 +32,7 @@ def get_recent_lol_matches(
 
 
 @router.get("/dota2/{match_id}", response_model=list[Dota2MatchSchema])
+@ttl_cache(seconds=300)
 def get_dota2_matches(match_id: int) -> list[Dota2MatchSchema]:
     sql = f"SELECT * FROM dota2_matches WHERE match_id = {match_id}"
     dota2_matches = run_query(sql)
@@ -36,6 +40,7 @@ def get_dota2_matches(match_id: int) -> list[Dota2MatchSchema]:
 
 
 @router.get("/lol/{match_id}", response_model=list[LoLMatchSchema])
+@ttl_cache(seconds=300)
 def get_lol_matches(
     match_id: str = Path(pattern=r"^[A-Za-z0-9_-]+$"),
 ) -> list[LoLMatchSchema]:

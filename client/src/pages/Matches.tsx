@@ -1,6 +1,7 @@
 import { useState } from "react";
 import GameSelector from "../components/GameSelector";
 import MatchTable from "../components/MatchTable";
+import Skeleton from "../components/Skeleton";
 import { useMatch, useRecentMatches } from "../hooks/useMatches";
 import { useMetaHeroes } from "../hooks/useMeta";
 import { toMatchRow } from "../lib/derive";
@@ -65,7 +66,7 @@ function Matches() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h1 className="text-2xl font-semibold text-zinc-100">
                     Matches
                 </h1>
@@ -74,14 +75,18 @@ function Matches() {
 
             {!selectedMatchId && (
                 <div className="space-y-1">
-                    {recent.loading && (
-                        <p className="text-sm text-zinc-500">
-                            Loading matches…
-                        </p>
-                    )}
+                    {recent.loading &&
+                        Array.from({ length: 8 }).map((_, i) => (
+                            <Skeleton key={i} className="h-10 w-full" />
+                        ))}
                     {recent.error && (
                         <p className="text-sm text-rose-400">
                             {recent.error.message}
+                        </p>
+                    )}
+                    {!recent.loading && recent.data?.length === 0 && (
+                        <p className="text-sm text-zinc-500">
+                            No recent matches found.
                         </p>
                     )}
                     {recent.data?.map((match) => (

@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 from src.handler import (
     _fetch_and_upload_lol_match,
+    build_match_object_key,
     build_object_key,
     ingest_dota_data,
     ingest_dota_hero_data,
@@ -50,6 +51,14 @@ def test_build_object_key_builds_correct_path(
     assert build_object_key(game, entity, identifier, timestamp) == expected_key
 
 
+def test_build_match_object_key_is_idempotent_per_match_id():
+    key = build_match_object_key("dota2", "123456789")
+    assert key == "dota2/matches/matches_123456789.json"
+    # Same match_id always produces the same key regardless of when it's
+    # called — that's the whole point (re-ingestion overwrites, not duplicates)
+    assert build_match_object_key("dota2", "123456789") == key
+
+
 def test_ingest_dota_hero_data_success():
     fake_heroes = [{"id": 1, "name": "Anti-Mage"}]
     fake_hero_stats = [{"hero_id": 1, "win_rate": 0.51}]
@@ -65,6 +74,34 @@ def test_ingest_dota_hero_data_success():
     assert mock_upload.call_count == 2
 
 
+def test_ingest_dota_hero_data_heroes_fetch_failure_still_tries_hero_stats():
+    fake_hero_stats = [{"hero_id": 1, "win_rate": 0.51}]
+
+    with (
+        patch("src.handler.get_heroes", return_value=None),
+        patch("src.handler.get_hero_stats", return_value=fake_hero_stats),
+        patch("src.handler.upload_json", return_value=True) as mock_upload,
+    ):
+        result = ingest_dota_hero_data("my-bucket")
+
+    assert result == {"heroes_uploaded": False, "hero_stats_uploaded": True}
+    assert mock_upload.call_count == 1
+
+
+def test_ingest_dota_hero_data_hero_stats_fetch_failure():
+    fake_heroes = [{"id": 1, "name": "Anti-Mage"}]
+
+    with (
+        patch("src.handler.get_heroes", return_value=fake_heroes),
+        patch("src.handler.get_hero_stats", return_value=None),
+        patch("src.handler.upload_json", return_value=True) as mock_upload,
+    ):
+        result = ingest_dota_hero_data("my-bucket")
+
+    assert result == {"heroes_uploaded": True, "hero_stats_uploaded": False}
+    assert mock_upload.call_count == 1
+
+
 def test_ingest_lol_champions_data_success():
     fake_version = "1.2"
     fake_champions = {"data": {"Aatrox": {}}}
@@ -78,9 +115,36 @@ def test_ingest_lol_champions_data_success():
     assert mock_upload.call_count == 1
 
 
+def test_ingest_lol_champions_data_version_fetch_failure():
+    fake_version = None
+    with (
+        patch("src.handler.get_current_version", return_value=fake_version),
+        patch("src.handler.get_champion_data") as mock_get_champion_data,
+        patch("src.handler.upload_json") as mock_upload,
+    ):
+        result = ingest_lol_champions_data("my-bucket")
+        assert result == {"champions_uploaded": False}
+        mock_get_champion_data.assert_not_called()
+        mock_upload.assert_not_called()
+    assert mock_upload.call_count == 0
+    assert mock_get_champion_data.call_count == 0
+    assert result == {"champions_uploaded": False}
+
+
+def test_ingest_lol_champions_data_champion_data_fetch_failure():
+    with (
+        patch("src.handler.get_current_version", return_value="1.2"),
+        patch("src.handler.get_champion_data", return_value=None),
+        patch("src.handler.upload_json") as mock_upload,
+    ):
+        result = ingest_lol_champions_data("my-bucket")
+
+    mock_upload.assert_not_called()
+    assert result == {"champions_uploaded": False}
+
+
 def test_fetch_and_upload_lol_match_success():
     fake_match_details = {"metadata": {"matchId": "KR_123"}}
-    timestamp = datetime(2026, 8, 13, 15, 30, 45, tzinfo=timezone.utc)
 
     with (
         patch(
@@ -88,12 +152,12 @@ def test_fetch_and_upload_lol_match_success():
         ) as mock_get,
         patch("src.handler.upload_json", return_value=True) as mock_upload,
     ):
-        result = _fetch_and_upload_lol_match("my-bucket", "asia", "KR_123", timestamp)
+        result = _fetch_and_upload_lol_match("my-bucket", "asia", "KR_123")
 
     mock_get.assert_called_once_with("asia", "KR_123")
     mock_upload.assert_called_once_with(
         "my-bucket",
-        "league_of_legends/matches/year=2026/month=08/day=13/matches_KR_123_20260813T153045.json",
+        "league_of_legends/matches/matches_KR_123.json",
         fake_match_details,
     )
     assert result is True
@@ -104,9 +168,7 @@ def test_fetch_and_upload_lol_match_fetch_failure_returns_false():
         patch("src.handler.get_lol_match_details", return_value=None),
         patch("src.handler.upload_json") as mock_upload,
     ):
-        result = _fetch_and_upload_lol_match(
-            "my-bucket", "asia", "KR_123", datetime.now(timezone.utc)
-        )
+        result = _fetch_and_upload_lol_match("my-bucket", "asia", "KR_123")
 
     mock_upload.assert_not_called()
     assert result is False
@@ -117,9 +179,7 @@ def test_fetch_and_upload_lol_match_upload_failure_returns_false():
         patch("src.handler.get_lol_match_details", return_value={"metadata": {}}),
         patch("src.handler.upload_json", return_value=False),
     ):
-        result = _fetch_and_upload_lol_match(
-            "my-bucket", "asia", "KR_123", datetime.now(timezone.utc)
-        )
+        result = _fetch_and_upload_lol_match("my-bucket", "asia", "KR_123")
 
     assert result is False
 
@@ -188,6 +248,46 @@ def test_ingest_league_of_legends_data_challenger_fetch_failure():
     }
 
 
+def test_ingest_league_of_legends_data_match_list_fetch_failure_is_skipped():
+    fake_challenger = {"entries": [{"puuid": "p1"}]}
+
+    with (
+        patch("src.handler.get_challenger_leagues", return_value=fake_challenger),
+        patch("src.handler.get_personal_match_list", return_value=None),
+        patch("src.handler._fetch_and_upload_lol_match") as mock_fu,
+    ):
+        result = ingest_league_of_legends_data("my-bucket")
+
+    mock_fu.assert_not_called()
+    assert result == {
+        "players_processed": 1,
+        "matches_uploaded": 0,
+        "matches_failed": 0,
+    }
+
+
+def test_ingest_league_of_legends_data_mixed_match_upload_results():
+    fake_challenger = {"entries": [{"puuid": "my-puuid"}]}
+    with (
+        patch("src.handler.get_challenger_leagues", return_value=fake_challenger),
+        patch(
+            "src.handler.get_personal_match_list", return_value=["m1", "m2"]
+        ) as mock_get_matches,
+        patch(
+            "src.handler._fetch_and_upload_lol_match", side_effect=[True, False]
+        ) as mock_fetch_and_upload,
+    ):
+        result = ingest_league_of_legends_data("my-bucket")
+
+    mock_get_matches.assert_called_once_with("asia", "my-puuid")
+    assert mock_fetch_and_upload.call_count == 2
+    assert result == {
+        "players_processed": 1,
+        "matches_uploaded": 1,
+        "matches_failed": 1,
+    }
+
+
 def test_ingest_league_of_legends_data_entry_missing_puuid_is_skipped():
     fake_challenger = {"entries": [{"no_puuid_here": True}]}
     with (
@@ -218,8 +318,12 @@ def test_lambda_handler_all_succeed():
             "src.handler.ingest_lol_champions_data",
             return_value={"champions_uploaded": True},
         ),
+        patch("src.handler.upload_json") as mock_upload,
     ):
         result = lambda_handler({}, None)
+
+    mock_upload.assert_called_once()
+    assert mock_upload.call_args.args[1] == "meta/last_run.json"
 
     assert result == {
         "dota2": {"fetched": 1},
@@ -243,6 +347,7 @@ def test_lambda_handler_isolates_one_source_failure():
             "src.handler.ingest_lol_champions_data",
             return_value={"champions_uploaded": True},
         ) as mock_champs,
+        patch("src.handler.upload_json") as mock_upload,
     ):
         result = lambda_handler({}, None)
 
@@ -250,4 +355,5 @@ def test_lambda_handler_isolates_one_source_failure():
     assert result["dota_heroes"] == {"heroes_uploaded": True}
     assert result["league_of_legends"] == {"players_processed": 1}
     assert result["lol_champions"] == {"champions_uploaded": True}
+    mock_upload.assert_called_once()
     mock_champs.assert_called_once()

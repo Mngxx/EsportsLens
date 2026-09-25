@@ -1,14 +1,40 @@
 import PipelineStatus from "../components/PipelineStatus";
+import Skeleton from "../components/Skeleton";
 import {
     useDota2DashboardSummary,
+    useHealth,
     useLoLDashboardSummary,
 } from "../hooks/useDashboard";
 import { useMetaHeroes } from "../hooks/useMeta";
 import type { Dota2Hero } from "../types";
 
+function DashboardSummarySkeleton() {
+    return (
+        <>
+            <div>
+                <Skeleton className="h-8 w-12" />
+                <Skeleton className="mt-2 h-3 w-20" />
+            </div>
+            <div>
+                <Skeleton className="mb-2 mt-4 h-3 w-32" />
+                <div className="space-y-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                        <Skeleton key={i} className="h-4 w-full" />
+                    ))}
+                </div>
+            </div>
+            <div>
+                <Skeleton className="mb-2 mt-4 h-3 w-40" />
+                <Skeleton className="h-4 w-48" />
+            </div>
+        </>
+    );
+}
+
 function Dashboard() {
     const dota2 = useDota2DashboardSummary();
     const lol = useLoLDashboardSummary();
+    const health = useHealth();
     const dota2Heroes = useMetaHeroes("dota2");
 
     let dota2HeroLookup: Record<number, string> | undefined;
@@ -22,13 +48,11 @@ function Dashboard() {
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h1 className="text-2xl font-semibold text-zinc-100">
                     Dashboard
                 </h1>
-                {/* lastRun stays null until Week 5 Day 4 wires up a real
-                    last-ingestion timestamp (see Section 15, Technical Debt) */}
-                <PipelineStatus lastRun={null} />
+                <PipelineStatus lastRun={health.data?.last_run ?? null} />
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -37,9 +61,7 @@ function Dashboard() {
                         Dota 2
                     </h2>
 
-                    {dota2.loading && (
-                        <p className="text-sm text-zinc-500">Loading…</p>
-                    )}
+                    {dota2.loading && <DashboardSummarySkeleton />}
                     {dota2.error && (
                         <p className="text-sm text-rose-400">
                             {dota2.error.message}
@@ -103,9 +125,7 @@ function Dashboard() {
                         League of Legends
                     </h2>
 
-                    {lol.loading && (
-                        <p className="text-sm text-zinc-500">Loading…</p>
-                    )}
+                    {lol.loading && <DashboardSummarySkeleton />}
                     {lol.error && (
                         <p className="text-sm text-rose-400">
                             {lol.error.message}

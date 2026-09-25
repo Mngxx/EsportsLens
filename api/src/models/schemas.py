@@ -2,6 +2,11 @@ from pydantic import BaseModel, field_validator
 from datetime import datetime
 
 
+class HealthSchema(BaseModel):
+    status: str
+    last_run: str | None
+
+
 class Dota2MatchSchema(BaseModel):
     match_id: str
     account_id: int

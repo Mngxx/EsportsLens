@@ -57,3 +57,14 @@ def test_transform_champions_flattens_to_one_row_per_champion(spark):
     assert jayce.title == "the Defender of Tomorrow"
     assert jayce.primary_tag == "Fighter"
     assert jayce.difficulty == 7
+
+
+def test_transform_matches_dedupes_a_match_reingested_multiple_times(spark, tmp_path):
+    sample = (FIXTURES_DIR / "league_of_legends_match_sample.json").read_text()
+    (tmp_path / "snapshot_1.json").write_text(sample)
+    (tmp_path / "snapshot_2.json").write_text(sample)
+
+    df = read_s3_json(str(tmp_path))
+    result = transform_matches(df).collect()
+
+    assert len(result) == 2

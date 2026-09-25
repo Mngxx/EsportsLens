@@ -36,7 +36,11 @@ function KDATrendLine({ matches }: KDATrendLineProps) {
                         })
                     }
                 />
-                <YAxis stroke="#71717a" tick={{ fontSize: 12 }} />
+                <YAxis
+                    stroke="#71717a"
+                    tick={{ fontSize: 12 }}
+                    domain={[0, "auto"]}
+                />
                 <Tooltip
                     contentStyle={{
                         background: "#18181b",

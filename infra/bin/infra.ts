@@ -37,4 +37,5 @@ const queryStack = new QueryStack(app, "QueryStack", {});
 new ApiStack(app, "ApiStack", {
   athenaResultsBucket: queryStack.athenaResultsBucket,
   curatedBucket: storageStack.curatedBucket,
+  rawBucket: storageStack.rawBucket,
 });

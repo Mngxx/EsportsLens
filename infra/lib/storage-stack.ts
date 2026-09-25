@@ -22,6 +22,26 @@ export class StorageStack extends cdk.Stack {
 			autoDeleteObjects: true,
 			versioned: true,
 			...bucketSecurityConfig,
+			lifecycleRules: [
+				{
+					// versioned:true with no prior lifecycle kept every old
+					// version forever — was a silent, unbounded cost driver.
+					id: "expire-noncurrent-versions",
+					noncurrentVersionExpiration: cdk.Duration.days(14),
+				},
+				{
+					// Raw matches are ETL staging only, safe to expire once
+					// curated has ingested them.
+					id: "expire-old-raw-matches",
+					prefix: "dota2/matches/",
+					expiration: cdk.Duration.days(60),
+				},
+				{
+					id: "expire-old-raw-lol-matches",
+					prefix: "league_of_legends/matches/",
+					expiration: cdk.Duration.days(60),
+				},
+			],
 		});
 
 		// Create the second bucket
@@ -31,6 +51,14 @@ export class StorageStack extends cdk.Stack {
 			autoDeleteObjects: true,
 			versioned: true,
 			...bucketSecurityConfig,
+			lifecycleRules: [
+				{
+					// No object expiration — curated is actively served by
+					// Athena, unlike raw. Just clean up old versions.
+					id: "expire-noncurrent-versions",
+					noncurrentVersionExpiration: cdk.Duration.days(14),
+				},
+			],
 		});
 	}
 }
