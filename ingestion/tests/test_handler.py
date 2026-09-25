@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 from src.handler import (
     _fetch_and_upload_lol_match,
+    build_match_object_key,
     build_object_key,
     ingest_dota_data,
     ingest_dota_hero_data,
@@ -48,6 +49,14 @@ def test_build_object_key_builds_correct_path(
     game, entity, identifier, timestamp, expected_key
 ):
     assert build_object_key(game, entity, identifier, timestamp) == expected_key
+
+
+def test_build_match_object_key_is_idempotent_per_match_id():
+    key = build_match_object_key("dota2", "123456789")
+    assert key == "dota2/matches/matches_123456789.json"
+    # Same match_id always produces the same key regardless of when it's
+    # called — that's the whole point (re-ingestion overwrites, not duplicates)
+    assert build_match_object_key("dota2", "123456789") == key
 
 
 def test_ingest_dota_hero_data_success():
@@ -136,7 +145,6 @@ def test_ingest_lol_champions_data_champion_data_fetch_failure():
 
 def test_fetch_and_upload_lol_match_success():
     fake_match_details = {"metadata": {"matchId": "KR_123"}}
-    timestamp = datetime(2026, 8, 13, 15, 30, 45, tzinfo=timezone.utc)
 
     with (
         patch(
@@ -144,12 +152,12 @@ def test_fetch_and_upload_lol_match_success():
         ) as mock_get,
         patch("src.handler.upload_json", return_value=True) as mock_upload,
     ):
-        result = _fetch_and_upload_lol_match("my-bucket", "asia", "KR_123", timestamp)
+        result = _fetch_and_upload_lol_match("my-bucket", "asia", "KR_123")
 
     mock_get.assert_called_once_with("asia", "KR_123")
     mock_upload.assert_called_once_with(
         "my-bucket",
-        "league_of_legends/matches/year=2026/month=08/day=13/matches_KR_123_20260813T153045.json",
+        "league_of_legends/matches/matches_KR_123.json",
         fake_match_details,
     )
     assert result is True
@@ -160,9 +168,7 @@ def test_fetch_and_upload_lol_match_fetch_failure_returns_false():
         patch("src.handler.get_lol_match_details", return_value=None),
         patch("src.handler.upload_json") as mock_upload,
     ):
-        result = _fetch_and_upload_lol_match(
-            "my-bucket", "asia", "KR_123", datetime.now(timezone.utc)
-        )
+        result = _fetch_and_upload_lol_match("my-bucket", "asia", "KR_123")
 
     mock_upload.assert_not_called()
     assert result is False
@@ -173,9 +179,7 @@ def test_fetch_and_upload_lol_match_upload_failure_returns_false():
         patch("src.handler.get_lol_match_details", return_value={"metadata": {}}),
         patch("src.handler.upload_json", return_value=False),
     ):
-        result = _fetch_and_upload_lol_match(
-            "my-bucket", "asia", "KR_123", datetime.now(timezone.utc)
-        )
+        result = _fetch_and_upload_lol_match("my-bucket", "asia", "KR_123")
 
     assert result is False
 
