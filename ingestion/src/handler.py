@@ -41,8 +41,15 @@ def build_object_key(
     return f"{game}/{entity}/year={year}/month={month}/day={day}/{entity}_{identifier}_{timestamp_str}.json"
 
 
+def build_match_object_key(game: str, match_id: str) -> str:
+    # No timestamp/date — a still-top-10 (Dota2) or still-in-last-3 (LoL)
+    # match gets re-ingested every run; keying on match_id alone makes that
+    # an overwrite instead of a new S3 object, so raw storage doesn't grow
+    # unboundedly from re-ingesting the same match over and over.
+    return f"{game}/matches/matches_{match_id}.json"
+
+
 def ingest_dota_data(bucket: str) -> dict:
-    timestamp = datetime.now(timezone.utc)
     pro_matches = get_pro_matches()
     results = {
         "fetched": 0,
@@ -65,7 +72,7 @@ def ingest_dota_data(bucket: str) -> dict:
             )
             results["failed"] += 1
             continue
-        s3_object_key = build_object_key("dota2", "matches", str(match_id), timestamp)
+        s3_object_key = build_match_object_key("dota2", str(match_id))
         if upload_json(bucket, s3_object_key, match_details):
             results["uploaded"] += 1
         else:
@@ -94,7 +101,6 @@ def ingest_dota_hero_data(bucket: str) -> dict:
 
 
 def ingest_league_of_legends_data(bucket: str) -> dict:
-    timestamp = datetime.now(timezone.utc)
     challenger_leagues = get_challenger_leagues(PLATFORM, "RANKED_SOLO_5x5")
     results = {"players_processed": 0, "matches_uploaded": 0, "matches_failed": 0}
     if challenger_leagues is None:
@@ -118,9 +124,7 @@ def ingest_league_of_legends_data(bucket: str) -> dict:
             continue
         match_ids = match_ids[:3]
         for match_id in match_ids:
-            if _fetch_and_upload_lol_match(
-                bucket, CONTINENTAL_REGION, match_id, timestamp
-            ):
+            if _fetch_and_upload_lol_match(bucket, CONTINENTAL_REGION, match_id):
                 results["matches_uploaded"] += 1
             else:
                 results["matches_failed"] += 1
@@ -128,16 +132,14 @@ def ingest_league_of_legends_data(bucket: str) -> dict:
     return results
 
 
-def _fetch_and_upload_lol_match(
-    bucket: str, region: str, match_id: str, timestamp: datetime
-) -> bool:
+def _fetch_and_upload_lol_match(bucket: str, region: str, match_id: str) -> bool:
     match_details = get_lol_match_details(region, match_id)
     if match_details is None:
         logger.warning(
             f"Failed to fetch League of Legends match details for match_id {match_id}."
         )
         return False
-    key = build_object_key("league_of_legends", "matches", match_id, timestamp)
+    key = build_match_object_key("league_of_legends", match_id)
     return upload_json(bucket, key, match_details)
 
 
