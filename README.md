@@ -1,7 +1,7 @@
 # EsportsLens
 
-> **Status: Weeks 1–4 Complete — Full Stack Live in Production**
-> Infrastructure, ingestion (S3 data lake + scheduled Lambda), ETL (Glue PySpark jobs → curated Parquet), querying (Athena, with partition projection), the FastAPI backend (Lambda + API Gateway, 15 endpoints across players/matches/meta/dashboard), and the React dashboard (Vercel) are deployed and verified end-to-end against real data.
+> **Status: Weeks 1–5 Complete — Full Stack Live, Tested, and Hardened**
+> Infrastructure, ingestion (S3 data lake + scheduled Lambda), ETL (Glue PySpark jobs → curated Parquet), querying (Athena, with partition projection), the FastAPI backend (Lambda + API Gateway, 15 endpoints across players/matches/meta/dashboard/health), and the React dashboard (Vercel) are deployed and verified end-to-end against real data. Week 5 added full automated test coverage (100% on ingestion and API), CI-enforced formatting, CloudWatch monitoring, server-side response caching + compression, code-split chart bundles, and a live pipeline-status indicator on the dashboard.
 > **Live demo:** [client-mngxx1.vercel.app](https://client-mngxx1.vercel.app/)
 
 A player and match stats platform (tracker.gg-style) that ingests match data from public game APIs, processes it through an AWS data pipeline, and surfaces player performance, ladder standings, and match insights through a public REST API and interactive dashboard.
@@ -23,7 +23,7 @@ Built as a hands-on portfolio project to learn AWS data engineering end-to-end �
 3. AWS Glue (PySpark) transforms the raw JSON into cleaned, typed, partitioned Parquet
 4. AWS Athena runs SQL directly over the curated Parquet data — no database to manage
 5. A FastAPI backend (deployed on Lambda) queries Athena and serves results as JSON over REST
-6. A React dashboard (Vite + TypeScript + Tailwind, hosted on Vercel) visualizes player stats, match history, and hero/champion meta trends (pick rate vs. win rate) — Dashboard, Players (search + stats + KDA trend), Matches (recent matches + full scoreboard detail), and Meta (pick/win rate scatter + leaderboards) pages, all backed by live Athena data
+6. A React dashboard (Vite + TypeScript + Tailwind, hosted on Vercel) visualizes player stats, match history, and hero/champion meta trends (pick rate vs. win rate) — Dashboard (with a live pipeline-status indicator showing the last successful ingestion run), Players (search + stats + KDA trend), Matches (recent matches + full scoreboard detail), and Meta (pick/win rate scatter + leaderboards) pages, all backed by live Athena data
 
 ---
 
@@ -40,7 +40,8 @@ Built as a hands-on portfolio project to learn AWS data engineering end-to-end �
 | Frontend | React 19 + Vite + TypeScript | Tailwind CSS v4, Recharts for visualizations |
 | Frontend Hosting | Vercel | Auto-deploy on push |
 | CI/CD | GitHub Actions | Path-triggered — each folder deploys independently |
-| Testing | pytest (ingestion/API), Vitest (frontend) | |
+| Testing | pytest (ingestion/API, 100% coverage), Vitest (frontend) | CI-gated via `format:check` → `test` → typecheck → build |
+| Monitoring | CloudWatch | Log groups + error-rate alarms on both Lambdas |
 
 **Data sources:** [OpenDota API](https://www.opendota.com) (Dota 2 pro matches — fully public, no key required), [Riot Games API](https://developer.riotgames.com) (League of Legends Challenger ladder — free personal key), [Data Dragon](https://developer.riotgames.com/docs/lol) (LoL champion static data — separate host, no auth)
 
@@ -118,6 +119,13 @@ npm run dev
 # VITE_API_URL=http://localhost:8000 (matching the uvicorn server above)
 ```
 
+```bash
+# Run the frontend test suite + formatting check (same checks CI runs)
+cd client
+npm test              # Vitest, colocated *.test.ts files
+npm run format:check  # Prettier — npm run format to auto-fix
+```
+
 ---
 
 ## Roadmap
@@ -144,10 +152,12 @@ npm run dev
 - [x] Deployed on Vercel, connected to the live API (`client/` as the project's Root Directory, `vercel.json` SPA rewrite for React Router)
 - [x] 3 new API endpoint families added along the way, since the original Week 3 API only ever supported id-based lookups: player search by name, a recent-matches list per game, and a consolidated per-game dashboard summary (today's matches, top-5-by-KDA this week, most-picked hero/champion this week)
 
-### Week 5 — CI/CD, Testing & Polish
-- [ ] Full test coverage across ingestion, API, and frontend
-- [ ] CloudWatch monitoring and alarms
-- [ ] Dark mode, responsive layout, performance pass
+### Week 5 — CI/CD, Testing & Polish ✅ Complete
+- [x] Full test coverage — 100% on ingestion and API (pytest), Vitest added for frontend hooks/utilities, all CI-gated
+- [x] Found and fixed a real data-correctness bug along the way: duplicate match rows from re-ingested pro matches, traced to the ETL layer and fixed with a dedup step, not just a frontend workaround
+- [x] Frontend polish — loading skeletons, error boundaries, responsive layout, sortable match table, Prettier enforced in CI
+- [x] CloudWatch log groups + error-rate alarms on both Lambdas; dashboard now shows a live last-ingestion-run indicator (previously a placeholder)
+- [x] Performance — server-side response caching + gzip compression on the API, chart components code-split out of the main JS bundle; Lighthouse performance scores 95–99 across all 4 pages
 
 ### Week 6 — Documentation & Portfolio Integration
 - [ ] Architecture diagram and demo walkthrough
