@@ -62,7 +62,7 @@ def transform_heroes(df: DataFrame) -> DataFrame:
 def transform_hero_stats(df: DataFrame) -> DataFrame:
     hero_stats_df = df.select(
         col("id").alias("hero_id"),
-        col("name").alias("hero_name"),
+        col("localized_name").alias("hero_name"),
         col("primary_attr"),
         col("attack_type"),
         col("pub_pick"),
