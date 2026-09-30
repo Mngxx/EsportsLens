@@ -8,12 +8,18 @@ import Skeleton from "../components/Skeleton";
 import { usePlayerSearch } from "../hooks/usePlayers";
 import { usePlayerMatches } from "../hooks/useMatches";
 import { useMetaHeroes } from "../hooks/useMeta";
+import {
+    useDota2DashboardSummary,
+    useLoLDashboardSummary,
+} from "../hooks/useDashboard";
 import { derivePlayerStats, toMatchRow } from "../lib/derive";
 import type {
     Dota2Hero,
     Dota2PlayerSearchResult,
+    Dota2TopPlayer,
     Game,
     LoLPlayerSearchResult,
+    LoLTopPlayer,
 } from "../types";
 
 interface SelectedPlayer {
@@ -52,6 +58,14 @@ function Players() {
 
     const search = usePlayerSearch(game, query);
     const heroes = useMetaHeroes(game);
+    // Top performers = same "top 5 by avg KDA this week" data the Dashboard
+    // already shows — one definition of "top," not a second one invented here.
+    const dota2Summary = useDota2DashboardSummary();
+    const lolSummary = useLoLDashboardSummary();
+    const topPerformers =
+        game === "dota2"
+            ? (dota2Summary.data?.top_players_by_kda ?? [])
+            : (lolSummary.data?.top_players_by_kda ?? []);
     const matches = usePlayerMatches(
         game,
         selectedPlayer?.id ?? "",
@@ -98,6 +112,40 @@ function Players() {
                         : "Search LoL players…"
                 }
             />
+
+            {!query && !selectedPlayer && (
+                <div className="space-y-1">
+                    <h2 className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                        Top Performers This Week
+                    </h2>
+                    {topPerformers.length === 0 && (
+                        <p className="text-sm text-zinc-500">
+                            No data yet.
+                        </p>
+                    )}
+                    {topPerformers.map((p) => {
+                        const id =
+                            game === "dota2"
+                                ? (p as Dota2TopPlayer).account_id
+                                : (p as LoLTopPlayer).puuid;
+                        return (
+                            <button
+                                key={id}
+                                type="button"
+                                onClick={() =>
+                                    handleSelectResult(id, p.player_name)
+                                }
+                                className="flex w-full items-center justify-between rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-left text-sm text-zinc-100 hover:border-violet-500"
+                            >
+                                <span>{p.player_name}</span>
+                                <span className="text-zinc-500">
+                                    {p.avg_kda.toFixed(2)} KDA
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
 
             {query && !selectedPlayer && (
                 <div className="space-y-1">
