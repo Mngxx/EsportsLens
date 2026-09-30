@@ -60,6 +60,7 @@ def test_transform_hero_stats_flattens_to_one_row_per_hero(spark):
     assert len(result) == 2
 
     drow_ranger = next(r for r in result if r.hero_id == 6)
+    assert drow_ranger.hero_name == "Drow Ranger"  # localized_name, not npc_dota_hero_*
     assert drow_ranger.pub_pick == 548994
     assert drow_ranger.pub_win == 255215
     assert drow_ranger.pro_pick == 10
@@ -68,6 +69,7 @@ def test_transform_hero_stats_flattens_to_one_row_per_hero(spark):
     assert drow_ranger.pick_rate == pytest.approx(548994 / ((548994 + 799651) / 10))
 
     lina = next(r for r in result if r.hero_id == 25)
+    assert lina.hero_name == "Lina"
     assert lina.pub_pick == 799651
     assert lina.pub_win == 395419
     assert lina.pro_pick == 29
