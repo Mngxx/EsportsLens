@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import PipelineStatus from "../components/PipelineStatus";
 import Skeleton from "../components/Skeleton";
 import {
@@ -89,7 +90,12 @@ function Dashboard() {
                                             key={p.account_id}
                                             className="flex justify-between"
                                         >
-                                            <span>{p.player_name}</span>
+                                            <Link
+                                                to={`/players?game=dota2&id=${p.account_id}&name=${encodeURIComponent(p.player_name)}`}
+                                                className="hover:text-violet-400 hover:underline"
+                                            >
+                                                {p.player_name}
+                                            </Link>
                                             <span>{p.avg_kda.toFixed(2)}</span>
                                         </li>
                                     ))}
@@ -153,7 +159,12 @@ function Dashboard() {
                                             key={p.puuid}
                                             className="flex justify-between"
                                         >
-                                            <span>{p.player_name}</span>
+                                            <Link
+                                                to={`/players?game=lol&id=${encodeURIComponent(p.puuid)}&name=${encodeURIComponent(p.player_name)}`}
+                                                className="hover:text-violet-400 hover:underline"
+                                            >
+                                                {p.player_name}
+                                            </Link>
                                             <span>{p.avg_kda.toFixed(2)}</span>
                                         </li>
                                     ))}

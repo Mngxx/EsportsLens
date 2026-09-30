@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import GameSelector from "../components/GameSelector";
 import SearchBar from "../components/SearchBar";
 import PlayerCard from "../components/PlayerCard";
@@ -23,10 +24,24 @@ interface SelectedPlayer {
 const KDATrendLine = lazy(() => import("../components/KDATrendLine"));
 
 function Players() {
-    const [game, setGame] = useState<Game>("dota2");
+    // Supports deep-linking from Dashboard's top-KDA list — ?game=&id=&name=
+    // pre-selects a player on load instead of requiring a fresh search.
+    const [searchParams] = useSearchParams();
+    const linkedGame = searchParams.get("game");
+    const linkedId = searchParams.get("id");
+    const linkedName = searchParams.get("name");
+
+    const [game, setGame] = useState<Game>(
+        linkedGame === "lol" ? "lol" : "dota2",
+    );
     const [query, setQuery] = useState("");
     const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayer | null>(
-        null,
+        linkedId && linkedName
+            ? {
+                  id: linkedGame === "lol" ? linkedId : Number(linkedId),
+                  name: linkedName,
+              }
+            : null,
     );
 
     function handleGameChange(nextGame: Game) {
@@ -101,10 +116,6 @@ function Players() {
                         </p>
                     )}
                     {search.data?.map((result) => {
-                        // Same cast-based-on-game pattern as above — the
-                        // search result's id field name differs per game
-                        // (account_id vs puuid), and `game` doesn't narrow
-                        // the union type automatically.
                         const id =
                             game === "dota2"
                                 ? (result as Dota2PlayerSearchResult).account_id
