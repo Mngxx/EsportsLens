@@ -48,7 +48,7 @@ function Players() {
     if (game === "dota2" && heroes.data) {
         const dota2Heroes = heroes.data as Dota2Hero[];
         dota2HeroLookup = dota2Heroes.reduce<Record<number, string>>(
-            (acc, hero) => ({ ...acc, [hero.hero_id]: hero.name }),
+            (acc, hero) => ({ ...acc, [hero.hero_id]: hero.localized_name }),
             {},
         );
     }

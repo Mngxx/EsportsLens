@@ -41,7 +41,7 @@ function Dashboard() {
     if (dota2Heroes.data) {
         const heroes = dota2Heroes.data as Dota2Hero[];
         dota2HeroLookup = heroes.reduce<Record<number, string>>(
-            (acc, hero) => ({ ...acc, [hero.hero_id]: hero.name }),
+            (acc, hero) => ({ ...acc, [hero.hero_id]: hero.localized_name }),
             {},
         );
     }
