@@ -120,6 +120,7 @@ class Dota2MatchSummarySchema(BaseModel):
     match_date: datetime
     duration_secs: int
     winning_team: str
+    league_id: int
 
 
 class LoLMatchSummarySchema(BaseModel):
