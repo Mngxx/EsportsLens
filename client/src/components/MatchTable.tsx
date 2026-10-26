@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import Skeleton from "./Skeleton";
-import type { MatchRow } from "../types";
+import type { Game, MatchRow } from "../types";
 
 interface MatchTableProps {
     matches: MatchRow[];
@@ -9,7 +9,16 @@ interface MatchTableProps {
 
 const SKELETON_ROW_COUNT = 5;
 
-type SortColumn = "player" | "result" | "character" | "kda" | "level" | "date";
+type SortColumn =
+    | "player"
+    | "result"
+    | "character"
+    | "kda"
+    | "lastHits"
+    | "gold"
+    | "damage"
+    | "level"
+    | "date";
 type SortDirection = "asc" | "desc";
 
 interface SortState {
@@ -17,14 +26,26 @@ interface SortState {
     direction: SortDirection;
 }
 
-const COLUMNS: { key: SortColumn; label: string }[] = [
-    { key: "player", label: "Player" },
-    { key: "result", label: "Result" },
-    { key: "character", label: "Hero/Champion" },
-    { key: "kda", label: "K/D/A" },
-    { key: "level", label: "Level" },
-    { key: "date", label: "Date" },
-];
+// LoL's "cs" is last hits, no separate denies concept — Dota2's column shows
+// "last hits/denies" (e.g. "200/10"), so the header label differs per game.
+function getColumns(
+    game: Game | undefined,
+): { key: SortColumn; label: string }[] {
+    return [
+        { key: "player", label: "Player" },
+        { key: "result", label: "Result" },
+        { key: "character", label: "Hero/Champion" },
+        { key: "kda", label: "K/D/A" },
+        {
+            key: "lastHits",
+            label: game === "lol" ? "Last Hits" : "Last Hit/Denies",
+        },
+        { key: "gold", label: "Gold" },
+        { key: "damage", label: "Damage" },
+        { key: "level", label: "Level" },
+        { key: "date", label: "Date" },
+    ];
+}
 
 function kdaRatio(match: MatchRow): number {
     return (match.kills + match.assists) / Math.max(match.deaths, 1);
@@ -40,6 +61,12 @@ function sortValue(match: MatchRow, column: SortColumn): number | string {
             return match.characterName.toLowerCase();
         case "kda":
             return kdaRatio(match);
+        case "lastHits":
+            return match.lastHits;
+        case "gold":
+            return match.gold;
+        case "damage":
+            return match.damage;
         case "level":
             return match.level;
         case "date":
@@ -82,25 +109,29 @@ interface TableBodyProps {
 }
 
 const COLUMN_WIDTHS: Record<SortColumn, string> = {
-    player: "22%",
-    result: "12%",
-    character: "22%",
-    kda: "16%",
-    level: "10%",
-    date: "18%",
+    player: "14%",
+    result: "8%",
+    character: "14%",
+    kda: "11%",
+    lastHits: "10%",
+    gold: "11%",
+    damage: "11%",
+    level: "7%",
+    date: "14%",
 };
 
 function MatchTableRows({ matches, sort, onSort }: TableBodyProps) {
+    const columns = getColumns(matches[0]?.game);
     return (
-        <table className="w-full min-w-[600px] table-fixed text-left text-sm">
+        <table className="w-full min-w-[860px] table-fixed text-left text-sm">
             <colgroup>
-                {COLUMNS.map(({ key }) => (
+                {columns.map(({ key }) => (
                     <col key={key} style={{ width: COLUMN_WIDTHS[key] }} />
                 ))}
             </colgroup>
             <thead>
                 <tr className="border-b border-zinc-800 text-zinc-500">
-                    {COLUMNS.map(({ key, label }) => {
+                    {columns.map(({ key, label }) => {
                         const isSorted = sort?.column === key;
                         return (
                             <th key={key} className="py-2 font-medium">
@@ -156,6 +187,17 @@ function MatchTableRows({ matches, sort, onSort }: TableBodyProps) {
                         <td className="py-2 text-zinc-300">
                             {match.kills}/{match.deaths}/{match.assists}
                         </td>
+                        <td className="py-2 text-zinc-300">
+                            {match.game === "dota2"
+                                ? `${match.lastHits}/${match.denies}`
+                                : match.lastHits}
+                        </td>
+                        <td className="py-2 text-zinc-300">
+                            {match.gold.toLocaleString()}
+                        </td>
+                        <td className="py-2 text-zinc-300">
+                            {match.damage.toLocaleString()}
+                        </td>
                         <td className="py-2 text-zinc-300">{match.level}</td>
                         <td className="py-2 text-zinc-500">
                             {toISODateTime(match.matchDate)}
@@ -198,9 +240,9 @@ function MatchTable({ matches, loading }: MatchTableProps) {
     if (loading) {
         return (
             <div className="overflow-x-auto">
-                <table className="w-full min-w-[600px] table-fixed text-left text-sm">
+                <table className="w-full min-w-[860px] table-fixed text-left text-sm">
                     <colgroup>
-                        {COLUMNS.map(({ key }) => (
+                        {getColumns(undefined).map(({ key }) => (
                             <col
                                 key={key}
                                 style={{ width: COLUMN_WIDTHS[key] }}
@@ -209,12 +251,11 @@ function MatchTable({ matches, loading }: MatchTableProps) {
                     </colgroup>
                     <thead>
                         <tr className="border-b border-zinc-800 text-zinc-500">
-                            <th className="py-2 font-medium">Player</th>
-                            <th className="py-2 font-medium">Result</th>
-                            <th className="py-2 font-medium">Hero/Champion</th>
-                            <th className="py-2 font-medium">K/D/A</th>
-                            <th className="py-2 font-medium">Level</th>
-                            <th className="py-2 font-medium">Date</th>
+                            {getColumns(undefined).map(({ key, label }) => (
+                                <th key={key} className="py-2 font-medium">
+                                    {label}
+                                </th>
+                            ))}
                         </tr>
                     </thead>
                     <tbody>
@@ -224,24 +265,11 @@ function MatchTable({ matches, loading }: MatchTableProps) {
                                     key={i}
                                     className="border-b border-zinc-900"
                                 >
-                                    <td className="py-2">
-                                        <Skeleton className="h-4 w-20" />
-                                    </td>
-                                    <td className="py-2">
-                                        <Skeleton className="h-4 w-12" />
-                                    </td>
-                                    <td className="py-2">
-                                        <Skeleton className="h-4 w-24" />
-                                    </td>
-                                    <td className="py-2">
-                                        <Skeleton className="h-4 w-16" />
-                                    </td>
-                                    <td className="py-2">
-                                        <Skeleton className="h-4 w-8" />
-                                    </td>
-                                    <td className="py-2">
-                                        <Skeleton className="h-4 w-32" />
-                                    </td>
+                                    {getColumns(undefined).map(({ key }) => (
+                                        <td key={key} className="py-2">
+                                            <Skeleton className="h-4 w-4/5" />
+                                        </td>
+                                    ))}
                                 </tr>
                             ),
                         )}

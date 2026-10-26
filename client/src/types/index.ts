@@ -191,5 +191,9 @@ export interface MatchRow {
     assists: number;
     level: number; // level (dota2) / champ_level (lol)
     team: "radiant" | "dire" | "blue" | "red";
+    gold: number; // net_worth (dota2) / gold_earned (lol)
+    damage: number; // hero_damage (dota2) / damage_to_champions (lol)
+    lastHits: number; // last_hits (dota2) / cs (lol)
+    denies: number | null; // dota2 only, null for lol
     matchDate: string; // ISO 8601
 }
