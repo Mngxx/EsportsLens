@@ -8,6 +8,9 @@ import type { Game, HeroChampionStat } from "../types";
 
 const PickWinScatter = lazy(() => import("../components/PickWinScatter"));
 
+// Below this many games, win rate is noise (e.g. 1 pick = 0% or 100%).
+const MIN_SAMPLE_SIZE_FOR_RANKING = 10;
+
 function Meta() {
     const [game, setGame] = useState<Game>("dota2");
     const heroStats = useMetaHeroStats(game);
@@ -16,7 +19,8 @@ function Meta() {
         heroStats.data?.map((s) => toHeroChampionStat(s, game)) ?? [];
 
     const withWinRate = stats.filter(
-        (s): s is HeroChampionStat & { winRate: number } => s.winRate !== null,
+        (s): s is HeroChampionStat & { winRate: number } =>
+            s.winRate !== null && s.sampleSize >= MIN_SAMPLE_SIZE_FOR_RANKING,
     );
 
     const topByWinRate: HeroChampionStat[] = [...withWinRate]

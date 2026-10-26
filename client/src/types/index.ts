@@ -137,6 +137,7 @@ export interface HeroChampionStat {
     name: string;
     pickRate: number; // 0-1
     winRate: number | null; // null for a Dota2 hero with zero pro picks/bans
+    sampleSize: number; // pub_pick (dota2) / matches_played (lol)
 }
 
 export interface Dota2TopPlayer {
