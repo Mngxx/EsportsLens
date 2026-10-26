@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -63,6 +64,33 @@ def test_transform_matches_dedupes_a_match_reingested_multiple_times(spark, tmp_
     sample = (FIXTURES_DIR / "league_of_legends_match_sample.json").read_text()
     (tmp_path / "snapshot_1.json").write_text(sample)
     (tmp_path / "snapshot_2.json").write_text(sample)
+
+    df = read_s3_json(str(tmp_path))
+    result = transform_matches(df).collect()
+
+    assert len(result) == 2
+
+
+def test_transform_matches_filters_out_remakes(spark, tmp_path):
+    # Real example: KR_8399733084, a 74s remake with 9/10 players still level 1.
+    sample = json.loads(
+        (FIXTURES_DIR / "league_of_legends_match_sample.json").read_text()
+    )
+    sample["info"]["gameDuration"] = 74
+    (tmp_path / "remake.json").write_text(json.dumps(sample))
+
+    df = read_s3_json(str(tmp_path))
+    result = transform_matches(df).collect()
+
+    assert result == []
+
+
+def test_transform_matches_keeps_matches_at_the_300s_floor(spark, tmp_path):
+    sample = json.loads(
+        (FIXTURES_DIR / "league_of_legends_match_sample.json").read_text()
+    )
+    sample["info"]["gameDuration"] = 300
+    (tmp_path / "at_floor.json").write_text(json.dumps(sample))
 
     df = read_s3_json(str(tmp_path))
     result = transform_matches(df).collect()

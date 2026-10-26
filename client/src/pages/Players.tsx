@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import GameSelector from "../components/GameSelector";
 import SearchBar from "../components/SearchBar";
 import PlayerCard from "../components/PlayerCard";
@@ -7,12 +8,18 @@ import Skeleton from "../components/Skeleton";
 import { usePlayerSearch } from "../hooks/usePlayers";
 import { usePlayerMatches } from "../hooks/useMatches";
 import { useMetaHeroes } from "../hooks/useMeta";
+import {
+    useDota2DashboardSummary,
+    useLoLDashboardSummary,
+} from "../hooks/useDashboard";
 import { derivePlayerStats, toMatchRow } from "../lib/derive";
 import type {
     Dota2Hero,
     Dota2PlayerSearchResult,
+    Dota2TopPlayer,
     Game,
     LoLPlayerSearchResult,
+    LoLTopPlayer,
 } from "../types";
 
 interface SelectedPlayer {
@@ -23,10 +30,24 @@ interface SelectedPlayer {
 const KDATrendLine = lazy(() => import("../components/KDATrendLine"));
 
 function Players() {
-    const [game, setGame] = useState<Game>("dota2");
+    // Supports deep-linking from Dashboard's top-KDA list — ?game=&id=&name=
+    // pre-selects a player on load instead of requiring a fresh search.
+    const [searchParams] = useSearchParams();
+    const linkedGame = searchParams.get("game");
+    const linkedId = searchParams.get("id");
+    const linkedName = searchParams.get("name");
+
+    const [game, setGame] = useState<Game>(
+        linkedGame === "lol" ? "lol" : "dota2",
+    );
     const [query, setQuery] = useState("");
     const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayer | null>(
-        null,
+        linkedId && linkedName
+            ? {
+                  id: linkedGame === "lol" ? linkedId : Number(linkedId),
+                  name: linkedName,
+              }
+            : null,
     );
 
     function handleGameChange(nextGame: Game) {
@@ -37,6 +58,14 @@ function Players() {
 
     const search = usePlayerSearch(game, query);
     const heroes = useMetaHeroes(game);
+    // Top performers = same "top 5 by avg KDA this week" data the Dashboard
+    // already shows — one definition of "top," not a second one invented here.
+    const dota2Summary = useDota2DashboardSummary();
+    const lolSummary = useLoLDashboardSummary();
+    const topPerformers =
+        game === "dota2"
+            ? (dota2Summary.data?.top_players_by_kda ?? [])
+            : (lolSummary.data?.top_players_by_kda ?? []);
     const matches = usePlayerMatches(
         game,
         selectedPlayer?.id ?? "",
@@ -48,7 +77,7 @@ function Players() {
     if (game === "dota2" && heroes.data) {
         const dota2Heroes = heroes.data as Dota2Hero[];
         dota2HeroLookup = dota2Heroes.reduce<Record<number, string>>(
-            (acc, hero) => ({ ...acc, [hero.hero_id]: hero.name }),
+            (acc, hero) => ({ ...acc, [hero.hero_id]: hero.localized_name }),
             {},
         );
     }
@@ -84,6 +113,38 @@ function Players() {
                 }
             />
 
+            {!query && !selectedPlayer && (
+                <div className="space-y-1">
+                    <h2 className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                        Top Performers This Week
+                    </h2>
+                    {topPerformers.length === 0 && (
+                        <p className="text-sm text-zinc-500">No data yet.</p>
+                    )}
+                    {topPerformers.map((p) => {
+                        const id =
+                            game === "dota2"
+                                ? (p as Dota2TopPlayer).account_id
+                                : (p as LoLTopPlayer).puuid;
+                        return (
+                            <button
+                                key={id}
+                                type="button"
+                                onClick={() =>
+                                    handleSelectResult(id, p.player_name)
+                                }
+                                className="flex w-full items-center justify-between rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-left text-sm text-zinc-100 hover:border-violet-500"
+                            >
+                                <span>{p.player_name}</span>
+                                <span className="text-zinc-500">
+                                    {p.avg_kda.toFixed(2)} KDA
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+
             {query && !selectedPlayer && (
                 <div className="space-y-1">
                     {search.loading &&
@@ -101,10 +162,6 @@ function Players() {
                         </p>
                     )}
                     {search.data?.map((result) => {
-                        // Same cast-based-on-game pattern as above — the
-                        // search result's id field name differs per game
-                        // (account_id vs puuid), and `game` doesn't narrow
-                        // the union type automatically.
                         const id =
                             game === "dota2"
                                 ? (result as Dota2PlayerSearchResult).account_id

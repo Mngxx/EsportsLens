@@ -16,10 +16,15 @@ def latest_s3_key(bucket: str, prefix: str) -> str:
     return max(keys)
 
 
-def read_s3_json(path: str, schema: StructType | None = None) -> DataFrame:
+def read_s3_json(
+    path: str, schema: StructType | None = None, recursive: bool = False
+) -> DataFrame:
     spark = SparkSession.builder.appName("Create PySpark DataFrame").getOrCreate()
     reader = spark.read.option("multiLine", True)
     if schema is not None:
         reader = reader.schema(schema)
+    if recursive:
+        # Disables Hive partition inference, which otherwise silently drops files that don't match it.
+        reader = reader.option("recursiveFileLookup", "true")
 
     return reader.json(path)

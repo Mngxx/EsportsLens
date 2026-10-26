@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -60,6 +61,7 @@ def test_transform_hero_stats_flattens_to_one_row_per_hero(spark):
     assert len(result) == 2
 
     drow_ranger = next(r for r in result if r.hero_id == 6)
+    assert drow_ranger.hero_name == "Drow Ranger"  # localized_name, not npc_dota_hero_*
     assert drow_ranger.pub_pick == 548994
     assert drow_ranger.pub_win == 255215
     assert drow_ranger.pro_pick == 10
@@ -68,6 +70,7 @@ def test_transform_hero_stats_flattens_to_one_row_per_hero(spark):
     assert drow_ranger.pick_rate == pytest.approx(548994 / ((548994 + 799651) / 10))
 
     lina = next(r for r in result if r.hero_id == 25)
+    assert lina.hero_name == "Lina"
     assert lina.pub_pick == 799651
     assert lina.pub_win == 395419
     assert lina.pro_pick == 29
@@ -80,6 +83,32 @@ def test_transform_matches_dedupes_a_match_reingested_multiple_times(spark, tmp_
     sample = (FIXTURES_DIR / "dota2_match_sample.json").read_text()
     (tmp_path / "snapshot_1.json").write_text(sample)
     (tmp_path / "snapshot_2.json").write_text(sample)
+
+    df = read_s3_json(str(tmp_path))
+    result = transform_matches(df).collect()
+
+    assert len(result) == 2
+
+
+def test_transform_matches_excludes_a_match_with_an_abandon(spark, tmp_path):
+    sample = json.loads((FIXTURES_DIR / "dota2_match_sample.json").read_text())
+    sample["players"][0]["leaver_status"] = 2  # abandoned
+    sample["players"][1]["leaver_status"] = 0
+    (tmp_path / "abandon.json").write_text(json.dumps(sample))
+
+    df = read_s3_json(str(tmp_path))
+    result = transform_matches(df).collect()
+
+    assert result == []
+
+
+def test_transform_matches_keeps_a_match_with_only_a_brief_disconnect(
+    spark, tmp_path
+):
+    sample = json.loads((FIXTURES_DIR / "dota2_match_sample.json").read_text())
+    sample["players"][0]["leaver_status"] = 1  # brief DC, not an abandon
+    sample["players"][1]["leaver_status"] = 0
+    (tmp_path / "brief_dc.json").write_text(json.dumps(sample))
 
     df = read_s3_json(str(tmp_path))
     result = transform_matches(df).collect()

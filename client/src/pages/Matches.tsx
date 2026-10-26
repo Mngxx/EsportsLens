@@ -8,6 +8,7 @@ import { toMatchRow } from "../lib/derive";
 import type {
     Game,
     Dota2Hero,
+    Dota2Match,
     Dota2MatchSummary,
     LoLMatchSummary,
 } from "../types";
@@ -30,6 +31,17 @@ function winningTeamLabel(
 
     const m = match as LoLMatchSummary;
     return m.winning_team_id === 100 ? "Blue" : "Red";
+}
+
+// Dota2 shows a bare league_id (no name data ingested yet); LoL's badge is static since all matches are Challenger by design.
+function matchContextLabel(
+    match: Dota2MatchSummary | LoLMatchSummary,
+    game: Game,
+): string {
+    if (game === "dota2") {
+        return `League #${(match as Dota2MatchSummary).league_id}`;
+    }
+    return "Challenger • Ranked Solo/Duo";
 }
 
 function Matches() {
@@ -55,7 +67,7 @@ function Matches() {
     if (game === "dota2" && heroes.data) {
         const dota2Heroes = heroes.data as Dota2Hero[];
         dota2HeroLookup = dota2Heroes.reduce<Record<number, string>>(
-            (acc, hero) => ({ ...acc, [hero.hero_id]: hero.name }),
+            (acc, hero) => ({ ...acc, [hero.hero_id]: hero.localized_name }),
             {},
         );
     }
@@ -96,8 +108,13 @@ function Matches() {
                             onClick={() => setSelectedMatchId(match.match_id)}
                             className="flex w-full items-center justify-between rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-left text-sm hover:border-violet-500"
                         >
-                            <span className="text-zinc-100">
-                                Match {match.match_id}
+                            <span className="flex flex-col">
+                                <span className="text-zinc-100">
+                                    Match {match.match_id}
+                                </span>
+                                <span className="text-xs text-zinc-500">
+                                    {matchContextLabel(match, game)}
+                                </span>
                             </span>
                             <span className="flex gap-3 text-zinc-500">
                                 <span>{winningTeamLabel(match, game)} won</span>
@@ -119,6 +136,14 @@ function Matches() {
                     >
                         ← Back to recent matches
                     </button>
+
+                    {matchDetail.data && matchDetail.data.length > 0 && (
+                        <p className="text-xs text-zinc-500">
+                            {game === "dota2"
+                                ? `League #${(matchDetail.data as Dota2Match[])[0].league_id}`
+                                : "Challenger • Ranked Solo/Duo"}
+                        </p>
+                    )}
 
                     {matchDetail.loading && (
                         <p className="text-sm text-zinc-500">Loading…</p>

@@ -16,7 +16,7 @@ router = APIRouter(prefix="/matches", tags=["matches"])
 def get_recent_dota2_matches(
     limit: int = Query(default=10, le=50),
 ) -> list[Dota2MatchSummarySchema]:
-    sql = f"SELECT DISTINCT match_id, match_date, duration_secs, team AS winning_team FROM dota2_matches WHERE win = true ORDER BY match_date DESC LIMIT {limit}"
+    sql = f"SELECT DISTINCT match_id, match_date, duration_secs, team AS winning_team, league_id FROM dota2_matches WHERE win = true ORDER BY match_date DESC LIMIT {limit}"
     recent_dota2_matches = run_query(sql)
     return recent_dota2_matches
 

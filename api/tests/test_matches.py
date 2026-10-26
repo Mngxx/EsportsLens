@@ -131,7 +131,7 @@ def test_get_recent_dota2_matches():
             make_dota2_match_summary_row(match_id="456", winning_team="dire"),
         ]
         mock_run_query.assert_called_once_with(
-            "SELECT DISTINCT match_id, match_date, duration_secs, team AS winning_team "
+            "SELECT DISTINCT match_id, match_date, duration_secs, team AS winning_team, league_id "
             "FROM dota2_matches WHERE win = true ORDER BY match_date DESC LIMIT 10"
         )
 

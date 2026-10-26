@@ -82,6 +82,75 @@ describe("toMatchRow", () => {
         const row = toMatchRow(makeLoLMatch({ champion_name: "Yasuo" }), "lol");
         expect(row.characterName).toBe("Yasuo");
     });
+
+    it("carries player_name through for Dota2", () => {
+        const row = toMatchRow(
+            makeDota2Match({ player_name: "Miracle-" }),
+            "dota2",
+        );
+        expect(row.playerName).toBe("Miracle-");
+    });
+
+    it("carries player_name through for LoL", () => {
+        const row = toMatchRow(
+            makeLoLMatch({ player_name: "Faker#KR1" }),
+            "lol",
+        );
+        expect(row.playerName).toBe("Faker#KR1");
+    });
+
+    it("carries level through directly for Dota2", () => {
+        const row = toMatchRow(makeDota2Match({ level: 27 }), "dota2");
+        expect(row.level).toBe(27);
+    });
+
+    it("maps champ_level to level for LoL", () => {
+        const row = toMatchRow(makeLoLMatch({ champ_level: 18 }), "lol");
+        expect(row.level).toBe(18);
+    });
+
+    it("carries team through directly for Dota2", () => {
+        const row = toMatchRow(makeDota2Match({ team: "dire" }), "dota2");
+        expect(row.team).toBe("dire");
+    });
+
+    it("maps team_id 100/200 to blue/red for LoL", () => {
+        const blueRow = toMatchRow(makeLoLMatch({ team_id: 100 }), "lol");
+        const redRow = toMatchRow(makeLoLMatch({ team_id: 200 }), "lol");
+        expect(blueRow.team).toBe("blue");
+        expect(redRow.team).toBe("red");
+    });
+
+    it("maps net_worth/hero_damage/last_hits/denies for Dota2", () => {
+        const row = toMatchRow(
+            makeDota2Match({
+                net_worth: 20000,
+                hero_damage: 15000,
+                last_hits: 200,
+                denies: 10,
+            }),
+            "dota2",
+        );
+        expect(row.gold).toBe(20000);
+        expect(row.damage).toBe(15000);
+        expect(row.lastHits).toBe(200);
+        expect(row.denies).toBe(10);
+    });
+
+    it("maps gold_earned/damage_to_champions/cs for LoL, denies null", () => {
+        const row = toMatchRow(
+            makeLoLMatch({
+                gold_earned: 14000,
+                damage_to_champions: 22000,
+                cs: 180,
+            }),
+            "lol",
+        );
+        expect(row.gold).toBe(14000);
+        expect(row.damage).toBe(22000);
+        expect(row.lastHits).toBe(180);
+        expect(row.denies).toBeNull();
+    });
 });
 
 describe("derivePlayerStats", () => {
@@ -138,6 +207,7 @@ describe("toHeroChampionStat", () => {
             name: "npc_dota_hero_antimage",
             pickRate: 0.1,
             winRate: 0.6,
+            sampleSize: 100,
         });
     });
 
@@ -155,6 +225,7 @@ describe("toHeroChampionStat", () => {
             name: "Yasuo",
             pickRate: 0.12,
             winRate: 0.5,
+            sampleSize: 12,
         });
     });
 });

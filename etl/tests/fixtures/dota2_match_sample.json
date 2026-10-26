@@ -23,7 +23,8 @@
 			"hero_damage": 29162,
 			"tower_damage": 28507,
 			"hero_healing": 0,
-			"level": 27
+			"level": 27,
+			"leaver_status": 0
 		},
 		{
 			"account_id": 140251702,
@@ -43,7 +44,8 @@
 			"hero_damage": 27318,
 			"tower_damage": 1566,
 			"hero_healing": 0,
-			"level": 26
+			"level": 26,
+			"leaver_status": 0
 		}
 	]
 }

@@ -106,6 +106,7 @@ export interface Dota2MatchSummary {
     match_date: string;
     duration_secs: number;
     winning_team: "radiant" | "dire";
+    league_id: number;
 }
 
 export interface LoLMatchSummary {
@@ -136,6 +137,7 @@ export interface HeroChampionStat {
     name: string;
     pickRate: number; // 0-1
     winRate: number | null; // null for a Dota2 hero with zero pro picks/bans
+    sampleSize: number; // pub_pick (dota2) / matches_played (lol)
 }
 
 export interface Dota2TopPlayer {
@@ -181,10 +183,17 @@ export interface HealthResponse {
 export interface MatchRow {
     matchId: string;
     game: Game;
+    playerName: string;
     characterName: string;
     win: boolean;
     kills: number;
     deaths: number;
     assists: number;
+    level: number; // level (dota2) / champ_level (lol)
+    team: "radiant" | "dire" | "blue" | "red";
+    gold: number; // net_worth (dota2) / gold_earned (lol)
+    damage: number; // hero_damage (dota2) / damage_to_champions (lol)
+    lastHits: number; // last_hits (dota2) / cs (lol)
+    denies: number | null; // dota2 only, null for lol
     matchDate: string; // ISO 8601
 }

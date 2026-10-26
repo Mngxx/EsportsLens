@@ -27,11 +27,18 @@ export function toMatchRow(
         return {
             matchId: m.match_id,
             game,
+            playerName: m.player_name,
             characterName: dota2HeroLookup?.[m.hero_id] ?? "Unknown",
             win: m.win,
             kills: m.kills,
             deaths: m.deaths,
             assists: m.assists,
+            level: m.level,
+            team: m.team,
+            gold: m.net_worth,
+            damage: m.hero_damage,
+            lastHits: m.last_hits,
+            denies: m.denies,
             matchDate: m.match_date,
         };
     }
@@ -40,11 +47,18 @@ export function toMatchRow(
     return {
         matchId: m.match_id,
         game,
+        playerName: m.player_name,
         characterName: m.champion_name,
         win: m.win,
         kills: m.kills,
         deaths: m.deaths,
         assists: m.assists,
+        level: m.champ_level,
+        team: m.team_id === 100 ? "blue" : "red",
+        gold: m.gold_earned,
+        damage: m.damage_to_champions,
+        lastHits: m.cs,
+        denies: null,
         matchDate: m.match_date,
     };
 }
@@ -104,6 +118,7 @@ export function toHeroChampionStat(
             name: s.hero_name,
             pickRate: s.pick_rate,
             winRate: s.win_rate,
+            sampleSize: s.pub_pick,
         };
     }
 
@@ -113,5 +128,6 @@ export function toHeroChampionStat(
         name: s.champion_name,
         pickRate: s.pick_rate,
         winRate: s.win_rate,
+        sampleSize: s.matches_played,
     };
 }

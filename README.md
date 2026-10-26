@@ -1,7 +1,7 @@
 # EsportsLens
 
-> **Status: Weeks 1–5 Complete — Full Stack Live, Tested, and Hardened**
-> Infrastructure, ingestion (S3 data lake + scheduled Lambda), ETL (Glue PySpark jobs → curated Parquet), querying (Athena, with partition projection), the FastAPI backend (Lambda + API Gateway, 15 endpoints across players/matches/meta/dashboard/health), and the React dashboard (Vercel) are deployed and verified end-to-end against real data. Week 5 added full automated test coverage (100% on ingestion and API), CI-enforced formatting, CloudWatch monitoring, server-side response caching + compression, code-split chart bundles, and a live pipeline-status indicator on the dashboard.
+> **Status: Weeks 1–5 Complete + Pre-Week 6 Data Polish — Full Stack Live, Tested, and Hardened**
+> Infrastructure, ingestion (S3 data lake + scheduled Lambda), ETL (Glue PySpark jobs → curated Parquet), querying (Athena, with partition projection), the FastAPI backend (Lambda + API Gateway, 15 endpoints across players/matches/meta/dashboard/health), and the React dashboard (Vercel) are deployed and verified end-to-end against real data. Week 5 added full automated test coverage (100% on ingestion and API), CI-enforced formatting, CloudWatch monitoring, server-side response caching + compression, code-split chart bundles, and a live pipeline-status indicator on the dashboard. A follow-up polish pass fixed several display/data-correctness issues found while using the live dashboard (hero names, player deep-links, match context, meta ranking skew) and added two ETL data-quality filters — a LoL remake filter and a Dota2 abandoned-match safety net.
 > **Live demo:** [client-mngxx1.vercel.app](https://client-mngxx1.vercel.app/)
 
 A player and match stats platform (tracker.gg-style) that ingests match data from public game APIs, processes it through an AWS data pipeline, and surfaces player performance, ladder standings, and match insights through a public REST API and interactive dashboard.
@@ -159,6 +159,14 @@ npm run format:check  # Prettier — npm run format to auto-fix
 - [x] CloudWatch log groups + error-rate alarms on both Lambdas; dashboard now shows a live last-ingestion-run indicator (previously a placeholder)
 - [x] Performance — server-side response caching + gzip compression on the API, chart components code-split out of the main JS bundle; Lighthouse performance scores 95–99 across all 4 pages
 - [x] S3 cost cleanup — ingestion schedule reduced 6h → 12h, S3 lifecycle rules added (neither raw nor curated bucket had ever had one), and raw match objects made idempotent per match ID so re-ingesting an already-seen match overwrites instead of piling up duplicates
+
+### Pre-Week 6 — Data Display Polish ✅ Complete
+- [x] Fixed Dota2 hero names (raw `npc_dota_hero_*` id → real localized name), both on the frontend and in the ETL `hero_stats` transform
+- [x] Dashboard top-KDA player names link to the Players page; Players page shows top performers instead of empty space when idle
+- [x] Matches page shows match context (league id for Dota2, static Challenger badge for LoL) instead of a bare match id
+- [x] Meta page: minimum sample-size floor before ranking by win rate, fixing skewed stats from single-digit-sample heroes/champions
+- [x] Match detail view split into two team tables with matching column widths; added Player, Level, Gold, Damage, Last Hits/Denies columns
+- [x] Two new ETL data-quality filters: LoL remake filter (duration floor) and a Dota2 abandoned-match safety net — both deployed with a full Glue re-run to backfill curated data
 
 ### Week 6 — Documentation & Portfolio Integration
 - [ ] Architecture diagram and demo walkthrough
