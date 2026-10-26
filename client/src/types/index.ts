@@ -106,6 +106,7 @@ export interface Dota2MatchSummary {
     match_date: string;
     duration_secs: number;
     winning_team: "radiant" | "dire";
+    league_id: number;
 }
 
 export interface LoLMatchSummary {
