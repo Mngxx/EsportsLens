@@ -99,6 +99,8 @@ def transform_matches(df: DataFrame) -> DataFrame:
         col("info.queueId").alias("queue_id"),
         explode(col("info.participants")).alias("participant"),
     )
+    # Filter out remakes — Riot's gameEndedInEarlySurrender flag is unreliable (often null), so use a duration floor instead.
+    matches_df = matches_df.filter(col("duration_secs") >= 300)
     matches_df = matches_df.select(
         col("match_id"),
         col("participant.puuid").alias("puuid"),
