@@ -138,6 +138,7 @@ describe("toHeroChampionStat", () => {
             name: "npc_dota_hero_antimage",
             pickRate: 0.1,
             winRate: 0.6,
+            sampleSize: 100,
         });
     });
 
@@ -155,6 +156,7 @@ describe("toHeroChampionStat", () => {
             name: "Yasuo",
             pickRate: 0.12,
             winRate: 0.5,
+            sampleSize: 12,
         });
     });
 });

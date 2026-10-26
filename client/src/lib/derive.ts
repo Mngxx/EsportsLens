@@ -104,6 +104,7 @@ export function toHeroChampionStat(
             name: s.hero_name,
             pickRate: s.pick_rate,
             winRate: s.win_rate,
+            sampleSize: s.pub_pick,
         };
     }
 
@@ -113,5 +114,6 @@ export function toHeroChampionStat(
         name: s.champion_name,
         pickRate: s.pick_rate,
         winRate: s.win_rate,
+        sampleSize: s.matches_played,
     };
 }
