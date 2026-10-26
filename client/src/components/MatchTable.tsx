@@ -9,7 +9,7 @@ interface MatchTableProps {
 
 const SKELETON_ROW_COUNT = 5;
 
-type SortColumn = "result" | "character" | "kda" | "date";
+type SortColumn = "player" | "result" | "character" | "kda" | "date";
 type SortDirection = "asc" | "desc";
 
 interface SortState {
@@ -18,6 +18,7 @@ interface SortState {
 }
 
 const COLUMNS: { key: SortColumn; label: string }[] = [
+    { key: "player", label: "Player" },
     { key: "result", label: "Result" },
     { key: "character", label: "Hero/Champion" },
     { key: "kda", label: "K/D/A" },
@@ -30,6 +31,8 @@ function kdaRatio(match: MatchRow): number {
 
 function sortValue(match: MatchRow, column: SortColumn): number | string {
     switch (column) {
+        case "player":
+            return match.playerName.toLowerCase();
         case "result":
             return match.win ? 1 : 0;
         case "character":
@@ -88,9 +91,10 @@ function MatchTable({ matches, loading }: MatchTableProps) {
     if (loading) {
         return (
             <div className="overflow-x-auto">
-                <table className="w-full min-w-[500px] text-left text-sm">
+                <table className="w-full min-w-[600px] text-left text-sm">
                     <thead>
                         <tr className="border-b border-zinc-800 text-zinc-500">
+                            <th className="py-2 font-medium">Player</th>
                             <th className="py-2 font-medium">Result</th>
                             <th className="py-2 font-medium">Hero/Champion</th>
                             <th className="py-2 font-medium">K/D/A</th>
@@ -104,6 +108,9 @@ function MatchTable({ matches, loading }: MatchTableProps) {
                                     key={i}
                                     className="border-b border-zinc-900"
                                 >
+                                    <td className="py-2">
+                                        <Skeleton className="h-4 w-20" />
+                                    </td>
                                     <td className="py-2">
                                         <Skeleton className="h-4 w-12" />
                                     </td>
@@ -131,7 +138,7 @@ function MatchTable({ matches, loading }: MatchTableProps) {
 
     return (
         <div className="overflow-x-auto">
-            <table className="w-full min-w-[500px] text-left text-sm">
+            <table className="w-full min-w-[600px] text-left text-sm">
                 <thead>
                     <tr className="border-b border-zinc-800 text-zinc-500">
                         {COLUMNS.map(({ key, label }) => {
@@ -170,6 +177,9 @@ function MatchTable({ matches, loading }: MatchTableProps) {
                             key={match.matchId}
                             className="border-b border-zinc-900"
                         >
+                            <td className="py-2 text-zinc-100">
+                                {match.playerName}
+                            </td>
                             <td className="py-2">
                                 <span
                                     className={

@@ -183,6 +183,7 @@ export interface HealthResponse {
 export interface MatchRow {
     matchId: string;
     game: Game;
+    playerName: string;
     characterName: string;
     win: boolean;
     kills: number;
