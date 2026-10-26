@@ -82,6 +82,22 @@ describe("toMatchRow", () => {
         const row = toMatchRow(makeLoLMatch({ champion_name: "Yasuo" }), "lol");
         expect(row.characterName).toBe("Yasuo");
     });
+
+    it("carries player_name through for Dota2", () => {
+        const row = toMatchRow(
+            makeDota2Match({ player_name: "Miracle-" }),
+            "dota2",
+        );
+        expect(row.playerName).toBe("Miracle-");
+    });
+
+    it("carries player_name through for LoL", () => {
+        const row = toMatchRow(
+            makeLoLMatch({ player_name: "Faker#KR1" }),
+            "lol",
+        );
+        expect(row.playerName).toBe("Faker#KR1");
+    });
 });
 
 describe("derivePlayerStats", () => {

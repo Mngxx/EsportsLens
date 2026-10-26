@@ -27,6 +27,7 @@ export function toMatchRow(
         return {
             matchId: m.match_id,
             game,
+            playerName: m.player_name,
             characterName: dota2HeroLookup?.[m.hero_id] ?? "Unknown",
             win: m.win,
             kills: m.kills,
@@ -40,6 +41,7 @@ export function toMatchRow(
     return {
         matchId: m.match_id,
         game,
+        playerName: m.player_name,
         characterName: m.champion_name,
         win: m.win,
         kills: m.kills,
