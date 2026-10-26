@@ -120,6 +120,37 @@ describe("toMatchRow", () => {
         expect(blueRow.team).toBe("blue");
         expect(redRow.team).toBe("red");
     });
+
+    it("maps net_worth/hero_damage/last_hits/denies for Dota2", () => {
+        const row = toMatchRow(
+            makeDota2Match({
+                net_worth: 20000,
+                hero_damage: 15000,
+                last_hits: 200,
+                denies: 10,
+            }),
+            "dota2",
+        );
+        expect(row.gold).toBe(20000);
+        expect(row.damage).toBe(15000);
+        expect(row.lastHits).toBe(200);
+        expect(row.denies).toBe(10);
+    });
+
+    it("maps gold_earned/damage_to_champions/cs for LoL, denies null", () => {
+        const row = toMatchRow(
+            makeLoLMatch({
+                gold_earned: 14000,
+                damage_to_champions: 22000,
+                cs: 180,
+            }),
+            "lol",
+        );
+        expect(row.gold).toBe(14000);
+        expect(row.damage).toBe(22000);
+        expect(row.lastHits).toBe(180);
+        expect(row.denies).toBeNull();
+    });
 });
 
 describe("derivePlayerStats", () => {

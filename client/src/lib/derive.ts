@@ -35,6 +35,10 @@ export function toMatchRow(
             assists: m.assists,
             level: m.level,
             team: m.team,
+            gold: m.net_worth,
+            damage: m.hero_damage,
+            lastHits: m.last_hits,
+            denies: m.denies,
             matchDate: m.match_date,
         };
     }
@@ -51,6 +55,10 @@ export function toMatchRow(
         assists: m.assists,
         level: m.champ_level,
         team: m.team_id === 100 ? "blue" : "red",
+        gold: m.gold_earned,
+        damage: m.damage_to_champions,
+        lastHits: m.cs,
+        denies: null,
         matchDate: m.match_date,
     };
 }
