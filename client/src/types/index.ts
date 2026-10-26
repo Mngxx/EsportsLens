@@ -189,5 +189,7 @@ export interface MatchRow {
     kills: number;
     deaths: number;
     assists: number;
+    level: number; // level (dota2) / champ_level (lol)
+    team: "radiant" | "dire" | "blue" | "red";
     matchDate: string; // ISO 8601
 }

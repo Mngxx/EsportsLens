@@ -119,9 +119,7 @@ function Players() {
                         Top Performers This Week
                     </h2>
                     {topPerformers.length === 0 && (
-                        <p className="text-sm text-zinc-500">
-                            No data yet.
-                        </p>
+                        <p className="text-sm text-zinc-500">No data yet.</p>
                     )}
                     {topPerformers.map((p) => {
                         const id =
