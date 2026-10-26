@@ -6,6 +6,7 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from pyspark.sql import DataFrame, Window
 from pyspark.sql.functions import col, explode, month, sum, when, year
+from pyspark.sql.functions import max as spark_max
 from utils.helpers import latest_s3_key, read_s3_json
 
 
@@ -108,6 +109,7 @@ def transform_matches(df: DataFrame) -> DataFrame:
         col("player.tower_damage").alias("tower_damage"),
         col("player.hero_healing").alias("hero_healing"),
         col("player.level").alias("level"),
+        col("player.leaver_status").alias("leaver_status"),
         col("leagueid").alias("league_id"),
         col("duration").alias("duration_secs"),
         col("start_time").cast("timestamp").alias("match_date"),
@@ -119,6 +121,16 @@ def transform_matches(df: DataFrame) -> DataFrame:
     # A still-top-10 pro match gets re-ingested as a new raw snapshot every
     # run — dedupe so re-ingestion doesn't duplicate its player rows.
     matches_df = matches_df.dropDuplicates(["match_id", "account_id"])
+    # Safety net: exclude the match if any player abandoned (leaver_status >= 2).
+    matches_df = matches_df.withColumn(
+        "_match_has_abandon",
+        spark_max(when(col("leaver_status") >= 2, 1).otherwise(0)).over(
+            Window.partitionBy("match_id")
+        ),
+    )
+    matches_df = matches_df.filter(col("_match_has_abandon") == 0).drop(
+        "_match_has_abandon", "leaver_status"
+    )
     return matches_df
 
 
