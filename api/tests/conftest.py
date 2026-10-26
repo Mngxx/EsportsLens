@@ -152,6 +152,7 @@ def make_dota2_match_summary_row(**overrides):
         "match_date": "2026-08-01T12:00:00",
         "duration_secs": 2400,
         "winning_team": "radiant",
+        "league_id": 19719,
     }
     row.update(overrides)
     return row
