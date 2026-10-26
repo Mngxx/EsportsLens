@@ -98,6 +98,28 @@ describe("toMatchRow", () => {
         );
         expect(row.playerName).toBe("Faker#KR1");
     });
+
+    it("carries level through directly for Dota2", () => {
+        const row = toMatchRow(makeDota2Match({ level: 27 }), "dota2");
+        expect(row.level).toBe(27);
+    });
+
+    it("maps champ_level to level for LoL", () => {
+        const row = toMatchRow(makeLoLMatch({ champ_level: 18 }), "lol");
+        expect(row.level).toBe(18);
+    });
+
+    it("carries team through directly for Dota2", () => {
+        const row = toMatchRow(makeDota2Match({ team: "dire" }), "dota2");
+        expect(row.team).toBe("dire");
+    });
+
+    it("maps team_id 100/200 to blue/red for LoL", () => {
+        const blueRow = toMatchRow(makeLoLMatch({ team_id: 100 }), "lol");
+        const redRow = toMatchRow(makeLoLMatch({ team_id: 200 }), "lol");
+        expect(blueRow.team).toBe("blue");
+        expect(redRow.team).toBe("red");
+    });
 });
 
 describe("derivePlayerStats", () => {

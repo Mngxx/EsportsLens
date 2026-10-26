@@ -33,6 +33,8 @@ export function toMatchRow(
             kills: m.kills,
             deaths: m.deaths,
             assists: m.assists,
+            level: m.level,
+            team: m.team,
             matchDate: m.match_date,
         };
     }
@@ -47,6 +49,8 @@ export function toMatchRow(
         kills: m.kills,
         deaths: m.deaths,
         assists: m.assists,
+        level: m.champ_level,
+        team: m.team_id === 100 ? "blue" : "red",
         matchDate: m.match_date,
     };
 }
