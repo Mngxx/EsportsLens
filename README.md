@@ -2,7 +2,7 @@
 
 > **Status: Weeks 1–5 Complete + Pre-Week 6 Data Polish — Full Stack Live, Tested, and Hardened**
 > Infrastructure, ingestion (S3 data lake + scheduled Lambda), ETL (Glue PySpark jobs → curated Parquet), querying (Athena, with partition projection), the FastAPI backend (Lambda + API Gateway, 15 endpoints across players/matches/meta/dashboard/health), and the React dashboard (Vercel) are deployed and verified end-to-end against real data. Week 5 added full automated test coverage (100% on ingestion and API), CI-enforced formatting, CloudWatch monitoring, server-side response caching + compression, code-split chart bundles, and a live pipeline-status indicator on the dashboard. A follow-up polish pass fixed several display/data-correctness issues found while using the live dashboard (hero names, player deep-links, match context, meta ranking skew) and added two ETL data-quality filters — a LoL remake filter and a Dota2 abandoned-match safety net.
-> **Live demo:** [client-mngxx1.vercel.app](https://client-mngxx1.vercel.app/)
+> **Live demo:** [client-jade-tau-80.vercel.app](https://client-jade-tau-80.vercel.app/) · **Video walkthrough:** [youtu.be/ibtNTDCwPvE](https://youtu.be/ibtNTDCwPvE)
 
 A player and match stats platform (tracker.gg-style) that ingests match data from public game APIs, processes it through an AWS data pipeline, and surfaces player performance, ladder standings, and match insights through a public REST API and interactive dashboard.
 
@@ -27,6 +27,30 @@ Built as a hands-on portfolio project to learn AWS data engineering end-to-end �
 
 ---
 
+## Architecture
+
+![EsportsLens architecture diagram](docs/EsportsLens_diagram_v1.png)
+
+Serverless, event-driven pipeline: scheduled ingestion → data lake → Spark ETL → SQL-on-S3 → REST API → dashboard.
+
+---
+
+## Screenshots
+
+| Dashboard | Players |
+|---|---|
+| ![Dashboard](docs/screenshots_v1/Dashboard_v1.png) | ![Players](docs/screenshots_v1/Players_v1.png) |
+
+| Player Detail | Matches |
+|---|---|
+| ![Player detail](docs/screenshots_v1/Players_detail_view_v1.png) | ![Matches](docs/screenshots_v1/Matches_v1.png) |
+
+| Match Detail | Meta |
+|---|---|
+| ![Match detail](docs/screenshots_v1/Matches_detail_view_v1.png) | ![Meta](docs/screenshots_v1/Meta_v1.png) |
+
+---
+
 ## Tech Stack
 
 | Layer | Technology | Notes |
@@ -42,6 +66,8 @@ Built as a hands-on portfolio project to learn AWS data engineering end-to-end �
 | CI/CD | GitHub Actions | Path-triggered — each folder deploys independently |
 | Testing | pytest (ingestion/API, 100% coverage), Vitest (frontend) | CI-gated via `format:check` → `test` → typecheck → build |
 | Monitoring | CloudWatch | Log groups + error-rate alarms on both Lambdas |
+
+**API Reference:** [Live Swagger UI](https://tqk96f1lj7.execute-api.ap-southeast-1.amazonaws.com/docs) — interactive docs for all 15 endpoints, generated directly from the deployed FastAPI app.
 
 **Data sources:** [OpenDota API](https://www.opendota.com) (Dota 2 pro matches — fully public, no key required), [Riot Games API](https://developer.riotgames.com) (League of Legends Challenger ladder — free personal key), [Data Dragon](https://developer.riotgames.com/docs/lol) (LoL champion static data — separate host, no auth)
 
