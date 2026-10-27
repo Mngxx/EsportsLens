@@ -27,6 +27,14 @@ Built as a hands-on portfolio project to learn AWS data engineering end-to-end �
 
 ---
 
+## Architecture
+
+![EsportsLens architecture diagram](docs/EsportsLens_diagram_v1.png)
+
+Serverless, event-driven pipeline: scheduled ingestion → data lake → Spark ETL → SQL-on-S3 → REST API → dashboard.
+
+---
+
 ## Tech Stack
 
 | Layer | Technology | Notes |
