@@ -35,6 +35,22 @@ Serverless, event-driven pipeline: scheduled ingestion → data lake → Spark E
 
 ---
 
+## Screenshots
+
+| Dashboard | Players |
+|---|---|
+| ![Dashboard](docs/screenshots_v1/Dashboard_v1.png) | ![Players](docs/screenshots_v1/Players_v1.png) |
+
+| Player Detail | Matches |
+|---|---|
+| ![Player detail](docs/screenshots_v1/Players_detail_view_v1.png) | ![Matches](docs/screenshots_v1/Matches_v1.png) |
+
+| Match Detail | Meta |
+|---|---|
+| ![Match detail](docs/screenshots_v1/Matches_detail_view_v1.png) | ![Meta](docs/screenshots_v1/Meta_v1.png) |
+
+---
+
 ## Tech Stack
 
 | Layer | Technology | Notes |
